@@ -1,0 +1,279 @@
+#:kivy 2.2.1
+#
+<MenuScreen>:
+  name: 'menu'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+
+    AnchorLayout:
+      anchor_x: 'center'
+      anchor_y: 'top'
+      padding: 0
+      spacing: 0
+      size_hint: 1, 0.4
+      pos_hint: {'top': 1}
+
+      Label:
+        size: self.texture_size
+        text: "Taichine" 
+        font_name: 'SEVESBRG'
+        font_size: self.height * 0.7
+        italic: True
+        size_hint: 1, 0.8
+        pos_hint: {'center_x': 0.5, 'center_y': 0.3}
+
+      Label:
+        size: self.texture_size
+        text:"Your personal Tai Chi trainer" 
+        font_name: 'SEVESBRG'
+        font_size: self.height * 0.4
+        italic: True
+        size_hint: 1, 0.2
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+    BoxLayout:
+      canvas:
+        Color:
+          rgb: 0.2, 0.2, 0.2
+        Rectangle:
+          size: self.size
+
+      orientation: 'vertical'
+      padding: 10
+      spacing: 10
+      size_hint: 1, 0.7
+      pos_hint: {'bottom': 1}
+
+      Button:
+        height: 110
+        text_size: None, None
+        font_size: 40
+        text: 'Pose Selection'
+        bold: True
+        on_press:  
+          root.manager.transition.direction = 'left'
+          root.manager.current = 'selection'
+
+      Button:
+        height: 110
+        text_size: None, None
+        font_size: 40
+        text: 'Custom Poses Upload'
+        bold: True
+
+      Button:
+        height: 110
+        text_size: None, None
+        font_size: 40
+        text: 'Options'
+        bold: True
+        on_press:  
+          root.manager.transition.direction = 'left'
+          root.manager.current = 'setting'
+
+      Button:
+        height: 110
+        text_size: None, None
+        font_size: 40
+        text: 'Quit'
+        bold: True
+        on_press: App.get_running_app().stop()
+
+<TrainingScreen>:
+  name: 'training'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+    
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Your score:'
+        color: 1, 1, 1, 1
+        font_name: 'SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'selection'
+
+    BoxLayout:
+      size_hint: 1, 0.4
+      pos_hint: {'center_y': 0.7}
+      orientation: 'horizontal'
+      padding: 10
+      spacing: 10
+
+      Camera:
+        id: camera
+        resolution: (640, 480)
+        play: False
+
+      Image:
+        source: 'poses/1/1.png'
+        size_hint: None, None
+        size: 140, 90
+        padding: 10
+
+    BoxLayout:
+      size_hint: 1, 0.4
+      pos_hint: {'bottom': 0}
+      orientation: 'horizontal'
+      padding: 10
+      spacing: 10
+
+<SettingScreen>:
+  name: 'setting'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Setting'
+        color: 1, 1, 1, 1
+        font_name: 'SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'menu'        
+    
+    GridLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size
+      cols: 2
+      rows: 2
+      size_hint: 1, 0.8
+      pos_hint: {'center_x': 0.5, 'bottom': 0}
+      padding: 50
+
+      Label:
+        text: 'Volume'
+        size_hint: 0.8, 0.2
+        font_size: self.width * 0.1
+        width: 80
+
+      Slider:
+        id: volume_slider
+        min: 0
+        max: 10
+        step: 1
+        orientation: 'horizontal'
+
+      Label:
+        text: 'Sensitivity'
+        size_hint: 0.8, 0.2
+        font_size: self.width * 0.1
+        width: 80
+
+      Slider:
+        id: sensitivity_slider
+        min: 0
+        max: 10
+        step: 1
+        orientation: 'horizontal'
+
+<SelectionScreen>:
+  name: 'selection'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Selection Your Training'
+        color: 1, 1, 1, 1
+        font_name: 'SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+      
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'menu'
+      
+    GridLayout:
+      id: menu_grid
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size
+      padding: 50, 10
+      spacing: 35, 10
+      size_hint: 1, 0.8
+      pos_hint: {'bottom': 0, 'center_x': 0.5} 
+      height: 500
+      rows: 4
+      cols: 4
+
+    AnchorLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size    
+      anchor_x: 'right'
+      anchor_y: 'bottom'
+      height: 15
+      size_hint: 0.2, 0.05
+
+      Label:
+        text: 'Next Page'
+        font_size: 20
+        color: 1, 1, 1, 1    
+        size_hint: None, None
+        bold: True
