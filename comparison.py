@@ -2,18 +2,39 @@ import json
 import numpy as np
 import math
 import sys
+import subprocess
 
+
+def text_to_speech(text, out_path):
+    # Construct the command to invoke the TTS engine
+    command = ["tts", "--text", text, "--out_path", out_path]
+
+    try:
+        # Run the command and capture the output
+        subprocess.run(command, check=True, shell=True)
+        print(f"TTS successfully generated at {out_path}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error running TTS command: {e}")
 
 # Expect to receive a tolerance level from front end
-def main(tolerance=10):
+def main(tolerance=10, ref_pose_path, user_pose_path):
 
     print(f"Current Tolerance Angle: {tolerance}")
-    # Load and parse the JSON files
-    with open('D:/Workspace/1_keypoints.json', 'r') as file:
-        input_data = json.load(file)
+    if user_pose_path is None or ref_pose_path is None:
+        print("Error: Please provide paths for user_pose and ref_pose.")
+        return
 
-    with open('D:/Workspace/2_keypoints.json', 'r') as file:
-        local_data = json.load(file)
+    try:
+        # Load and parse the JSON files
+        with open(user_pose_path, 'r') as file:
+            input_data = json.load(file)
+
+        with open(ref_pose_path, 'r') as file:
+            local_data = json.load(file)
+
+    except FileNotFoundError:
+        print("Error: One or both of the provided JSON files not found.")
+        return
 
     # Extract the keypoints from the JSON data
     input_keypoints = input_data["people"][0]["pose_keypoints_2d"]
@@ -112,7 +133,11 @@ def main(tolerance=10):
     print(f"Score: {average_similarity*100}")
 
     if average_similarity > 0.9:
+        message = "Great, you made it!"
+        out_path = "D:/Workspace/Taichine/Voice/Good.wav"
+        # TODO: Make the playing of the file
         print(f"Great, you made it!")
+        text_to_speech(message, out_path)
         sys.exit()
 
 
