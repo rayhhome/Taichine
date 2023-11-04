@@ -25,6 +25,16 @@ import os
 Builder.load_file("upload_button.kv")
 
 class upload_image_widget(Screen):
+    
+    def exit_button(self):
+        print("\n\nEXIT button pressed!\n\n")
+
+    def left_button(self):
+        print("\n\nLEFT button pressed!\n\n")
+
+    def right_button(self):
+        print("\n\nRIGHT button pressed!\n\n")
+
     pass
 
 
@@ -72,8 +82,8 @@ class customApp(App):
 
         sm = ScreenManager(transition=NoTransition())
         
-        sm.add_widget(upload_layout(name='upload_screen'))
-        # sm.add_widget(upload_image_widget(name='selection_screen'))
+        sm.add_widget(upload_layout())
+        sm.add_widget(upload_image_widget())
         return sm
         # return upload_layout()
     

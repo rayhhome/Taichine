@@ -1,72 +1,81 @@
 #:kivy 2.2.1
 #:import Factory kivy.factory.Factory
 
-# <upload_image_widget>
-#     id: pic_widget
+<upload_image_widget>
+    name: 'custom_ordering'
     
-#     GridLayout:
-#         canvas.before:
-#             Rectangle:
-#                 pos: self.pos
-#                 size: self.size
-#                 Color:
-#                     rgba: 1, 1, 1, 1
-#         Image:
-#             id: pose_image
-#             source: 'icons/button-left.png'
+    GridLayout:
+        orientation: "lr-tb"
+        rows: 2
+        cols: 5
+
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                Color:
+                    rgba: 1, 1, 1, 1
+        Image:
+            id: pose_image
+            source: 'user_poses/pose_0.png'
             
 
-    # RelativeLayout:
-    #     Button:
-    #         id: exit_button
-    #         size_hint: self.parent.width / 4, self.parent.height / 4
-    #         x: self.parent.right
-    #         y: self.parent.top
-    #         background_color: 255,255,255,1
-           
-    #         on_press: root.exit_button()
-
-    #         Image:
-    #             id:exit_button_image
-    #             source: 'icons/exit-icon.png'
-    #             center_x: self.parent.center_x
-    #             center_y: self.parent.center_y
-
-        
-    #     Button:
-    #         id: left_button
-    #         size_hint: self.parent.width / 4, self.parent.height / 4
+            # RelativeLayout:
+                
+            Button:
+                id: exit_button
+                size_hint: self.parent.width / 4, self.parent.height / 4
+                # pos_hint: {'left': 0, 'top': 0}
+                pos_hint: {'x': 0, 'y': 500}
+                # size_hint: 0.1, 0.1
+                background_color: 255,255,255,1
             
-    #         background_color: 255,255,255,1
-          
+                on_press: root.exit_button()
 
-    #         on_press: root.left_button()
+                Image:
+                    id:exit_button_image
+                    source: 'icons/exit-icon.png'
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
 
-    #         Image:
-    #             id:left_button_image
-    #             source: 'icons/button-left.png'
-    #             center_x: self.parent.center_x
-    #             center_y: self.parent.center_y
-        
-    #     Button:
-    #         id: right_button
-    #         size_hint: self.parent.width / 4, self.parent.height / 4
             
-    #         background_color: 255,255,255,1
-            
-    #         on_press: root.right_button()
+            Button:
+                id: left_button
+                size_hint: self.parent.width / 4, self.parent.height / 4
+                
+                background_color: 255,255,255,1
+                # pos_hint: {'left': 0.5, 'top': 0.5}
+                pos_hint: {'x': 300, 'y': 300}
+                # size_hint: 0.1, 0.1
+                on_press: root.left_button()
 
-    #         Image:
-    #             id:right_button_image
-    #             source: 'icons/button-right.png'
-    #             center_x: self.parent.center_x
-    #             center_y: self.parent.center_y
+                Image:
+                    id:left_button_image
+                    source: 'icons/button-left.png'
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+            
+            Button:
+                id: right_button
+                size_hint: self.parent.width / 4, self.parent.height / 4
+                
+                background_color: 255,255,255,1
+                # pos_hint: {'left': 0, 'top': 1}
+                pos_hint: {'x': 500, 'y': 500}
+                # size_hint: 0.1, 0.1
+                on_press: root.right_button()
+
+                Image:
+                    id:right_button_image
+                    source: 'icons/button-right.png'
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
 				
 
 
 <upload_layout>
 
-    id: upload_widget
+    name: 'custom'
     BoxLayout:
         id: layout
         orientation: "vertical"
@@ -98,7 +107,7 @@
             background_color: 255,255,255,1
             # background_normal: 'icons/file-upload_white.png'
             on_press: 
-                # root.manager.current = "selection_screen"
+                root.manager.current = "custom_ordering"
                 root.select_file()
 
           
