@@ -33,8 +33,7 @@ class TrainingScreen(Screen):
 
 class TaichineApp(App):
   def build(self):
-    Window.size = (720, 540)
-    Window.minimum_width, Window.minimum_height = Window.size    
+    Window.minimum_width, Window.minimum_height = (800, 600)    
     smanager = ScreenManager()
     smanager.add_widget(MenuScreen())
     smanager.add_widget(SelectionScreen())
