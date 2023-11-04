@@ -4,6 +4,7 @@ from kivy.uix.widget import Widget
 from kivy.uix.button import Button
 # from kivy.uix.filechooser import FileChooser
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.relativelayout import RelativeLayout
 from kivy.factory import Factory
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
@@ -11,6 +12,8 @@ from kivy.lang import Builder
 from kivy.core import window
 from kivy.uix.label import Label
 from plyer import filechooser
+from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
+from kivy.properties import StringProperty
 
 import os
 
@@ -21,27 +24,11 @@ import os
 
 Builder.load_file("upload_button.kv")
 
-class File_choose_popup(Widget):
-
-    def selected(self, filepath, filename):
-        try:
-            self.File_choose_widget.file_path = filename[0]
-            src = filename[0]
-            path = filepath[0]
-            
-            # if os.name == 'nt':  # Windows
-            #     cmd = f'copy "{src}" "{dst}"'
-            # else:  # Unix/Linux
-            #     cmd = f'cp "{src}" "{dst}"'
-        except:
-            popup = Popup(title='Upload Failed',
-                      content=Label(text='Hello world'),
-                      size_hint=(None, None), size=(400, 400))
-            popup.open()
+class upload_image_widget(Screen):
+    pass
 
 
-
-class upload_layout(Widget):
+class upload_layout(Screen):
 
     def __init__(self, **kwargs):
         self.curr_dir = curr_dir = os.getcwd()
@@ -52,7 +39,7 @@ class upload_layout(Widget):
     def select_file(self):
         os.system(f"mkdir {self.poses_folder}")
         filechooser.open_file(on_selection = self.selected)
-
+        
         # path = filechooser.open_file(title="Choose an Image to Upload!", 
         #                      filters=[("PNG Files", "*.png")])
     
@@ -62,7 +49,9 @@ class upload_layout(Widget):
         print("self.curr_dir: ", self.curr_dir)
         
         for i in range(len(selection)):
-            dest.append(f"{self.curr_dir}\\user_poses\\pose_{i}.png")
+            src_split_list = src[i].split('\\')
+            filename = src_split_list[-1] 
+            dest.append(f"{self.curr_dir}\\user_poses\\{filename}")
 
         
         for j in range(len(dest)):
@@ -71,6 +60,7 @@ class upload_layout(Widget):
             print("dest: ", dest[j])
             os.system(cmd)
         # print(selection[0])
+    
         print("done")
 
    
@@ -79,8 +69,13 @@ class upload_layout(Widget):
 class customApp(App):
 
     def build(self):
+
+        sm = ScreenManager(transition=NoTransition())
         
-        return upload_layout()
+        sm.add_widget(upload_layout(name='upload_screen'))
+        # sm.add_widget(upload_image_widget(name='selection_screen'))
+        return sm
+        # return upload_layout()
     
     
     
