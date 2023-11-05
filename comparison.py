@@ -7,7 +7,6 @@ import argparse
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 
-
 def text_to_speech(text, out_path):
     # Construct the command to invoke the TTS engine
     command = ["tts", "--text", text, "--out_path", out_path]
@@ -163,6 +162,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--user_image", required = True)
     parser.add_argument("--reference_pose", required = True)
+    parser.add_argument("--tolerance", type=int, default=10, help="Tolerance value")
 
     args = parser.parse_args()
 
