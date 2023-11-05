@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 import subprocess
+import argparse
 
 
 def text_to_speech(text, out_path):
@@ -17,7 +18,7 @@ def text_to_speech(text, out_path):
         print(f"Error running TTS command: {e}")
 
 # Expect to receive a tolerance level from front end
-def main(tolerance=10, ref_pose_path, user_pose_path):
+def main(tolerance, ref_pose_path, user_pose_path):
 
     print(f"Current Tolerance Angle: {tolerance}")
     if user_pose_path is None or ref_pose_path is None:
@@ -58,8 +59,10 @@ def main(tolerance=10, ref_pose_path, user_pose_path):
     input_keypoints = input_keypoints[:15]
     local_keypoints = local_keypoints[:15]
 
-    # name_list=[Head, Right_Shoulder, Right_Upperarm, Right_Lowerarm, Left_Shoulder, Left_Upperarm, Left_Lowerarm, Upper_Body, Left_Waist,
-    #        Left_Thigh, Left_Calf, Right_Waist, Right_Thigh, Right_Calf]
+    name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
+               "Left_Lowerarm", "Upper_Body", "Left_Waist", "Left_Thigh", "Left_Calf", "Right_Waist",
+                "Right_Thigh", "Right_Calf"]
+    
     # Defining all user inputs
     head_torso = input_keypoints[0] - input_keypoints[1]
     torso_rarmtop = input_keypoints[1] - input_keypoints[2]
@@ -76,13 +79,13 @@ def main(tolerance=10, ref_pose_path, user_pose_path):
     rlegtop_rlegmid = input_keypoints[12] - input_keypoints[13]
     rlegmid_rfoot = input_keypoints[13] - input_keypoints[14]
 
-    input_set = {
+    input_set = [
         tuple(head_torso), tuple(torso_rarmtop), tuple(rarmtop_rarmmid),
         tuple(rarmmid_rhand), tuple(torso_larmtop), tuple(larmtop_larmmid),
         tuple(larmmid_lhand), tuple(torso_waist), tuple(waist_llegtop),
         tuple(llegtop_llegmid), tuple(llegmid_lfoot), tuple(waist_rlegtop),
         tuple(rlegtop_rlegmid), tuple(rlegmid_rfoot)
-    }
+    ]
 
     # Define All Local Inputs
     head_torsol = local_keypoints[0] - local_keypoints[1]
@@ -100,13 +103,13 @@ def main(tolerance=10, ref_pose_path, user_pose_path):
     rlegtop_rlegmidl = local_keypoints[12] - local_keypoints[13]
     rlegmid_rfootl = local_keypoints[13] - local_keypoints[14]
 
-    local_set = {
+    local_set = [
         tuple(head_torsol), tuple(torso_rarmtopl), tuple(rarmtop_rarmmidl),
         tuple(rarmmid_rhandl), tuple(torso_larmtopl), tuple(larmtop_larmmidl),
         tuple(larmmid_lhandl), tuple(torso_waistl), tuple(waist_llegtopl),
         tuple(llegtop_llegmidl), tuple(llegmid_lfootl), tuple(waist_rlegtopl),
         tuple(rlegtop_rlegmidl), tuple(rlegmid_rfootl)
-    }
+    ]
 
     similarities = []
     angles_in_degrees = []
@@ -114,7 +117,7 @@ def main(tolerance=10, ref_pose_path, user_pose_path):
     for vector1, vector2 in zip(input_set, local_set):
         norm1 = np.linalg.norm(vector1)
         norm2 = np.linalg.norm(vector2)
-        
+
         # Check if either norm is zero or very close to zero
         if norm1 < 1e-10 or norm2 < 1e-10:
             # Handle the case where the magnitude is too small
@@ -124,21 +127,21 @@ def main(tolerance=10, ref_pose_path, user_pose_path):
             similarity = np.dot(vector1, vector2) / (norm1 * norm2)
             similarity = max(-1, min(1, similarity))
             angle = np.arccos(similarity)
-            angle_degrees = np.degrees(angle)
+            # angle_degrees = np.degrees(angle)
 
         similarities.append(similarity)
-        angles_in_degrees.append(angle_degrees)
-        
+        angles_in_degrees.append(angle)
+
     average_similarity = np.mean(similarities) # TODO: Pending for changes, valuing lower body part more?
     print(f"Score: {average_similarity*100}")
 
-    if average_similarity > 0.9:
-        message = "Great, you made it!"
-        out_path = "D:/Workspace/Taichine/Voice/Good.wav"
-        # TODO: Make the playing of the file
-        print(f"Great, you made it!")
-        text_to_speech(message, out_path)
-        sys.exit()
+    # if average_similarity > 0.9:
+    #     message = "Great, you made it!"
+    #     out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Probably need a voice dir as well
+    #     # TODO: Make the playing of the file
+    #     print(f"Great, you made it!")
+    #     text_to_speech(message, out_path)
+    #     sys.exit()
 
 
     for i, (similarity, angle_degrees) in enumerate(zip(similarities, angles_in_degrees)):
@@ -146,20 +149,22 @@ def main(tolerance=10, ref_pose_path, user_pose_path):
             break
         else:
             if math.isnan(angle_degrees):
-                print(f"Angle (in degrees) between input_set[{i}] and local_set[{i}]: 0.0000")
+                print(f"Angle (in degrees) between {name_list[i]} and reference pose: 0.0000")
             else:
-                print(f"Angle (in degrees) between input_set[{i}] and local_set[{i}]: {angle_degrees:.4f}")
+                print(f"Angle (in degrees) between {name_list[i]} and reference pose: {(angle_degrees * 180 / math.pi):.4f}")
+    return
 
 if __name__ == "__main__":
-    # Provide the 'tolerance' value as a command-line argument, it defaults to 10 degrees if not provided.
-    if len(sys.argv) > 1:
-        try:
-            tolerance = float(sys.argv[1])
-            main(tolerance)
-        except ValueError:
-            print("Tolerance must be a valid number.")
-    else:
-        main()  # Default tolerance of 0
+    parser = argparse.ArgumentParser(description="Taichine Comparison")
+    
+    # Add command-line arguments for your function parameters
+    parser.add_argument("--tolerance", type=int, default=10, help="Tolerance value")
+    parser.add_argument("--ref_pose_path", type=str, default="D:/Workspace/Taichine/1_keypoints.json", help="Reference pose path")
+    parser.add_argument("--user_pose_path", type=str, default="D:/Workspace/Taichine/2_keypoints.json", help="User pose path")
+    
+    args = parser.parse_args()
+    
+    main(args.tolerance, args.ref_pose_path, args.user_pose_path)
 
 
 # TODO: Change this, this is currently a debug output
