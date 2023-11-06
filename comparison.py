@@ -4,21 +4,46 @@ import math
 import sys
 import subprocess
 import argparse
+# sys.path.append("..")
+from OpenPoseInter import parseImageFromPath
+import pygame
 
 
+def play_wav_file(file_path):
+    pygame.init()
+    pygame.mixer.init()
+
+    try:
+        sound = pygame.mixer.Sound(file_path)
+        sound.play()
+        pygame.time.delay(int(sound.get_length() * 1000))
+    except pygame.error as e:
+        print(f"Error playing the WAV file: {e}")
+    finally:
+        pygame.quit()
+
+# For unit Testing
+# def text_to_speech(text, out_path):
+#     # Construct the command to invoke the TTS engine
+#     command = ["tts", "--text", text, "--out_path", out_path]
+
+#     try:
+#         # Run the command and capture the output
+#         subprocess.run(command, check=True, shell=True)
+#         subprocess.run(command)
+#         print(f"TTS successfully generated at {out_path}")
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error running TTS command: {e}")
+
+# For Efficiency
 def text_to_speech(text, out_path):
     # Construct the command to invoke the TTS engine
     command = ["tts", "--text", text, "--out_path", out_path]
+    subprocess.run(command)
 
-    try:
-        # Run the command and capture the output
-        subprocess.run(command, check=True, shell=True)
-        print(f"TTS successfully generated at {out_path}")
-    except subprocess.CalledProcessError as e:
-        print(f"Error running TTS command: {e}")
 
 # Expect to receive a tolerance level from front end
-def main(tolerance, ref_pose_path, user_pose_path):
+def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     print(f"Current Tolerance Angle: {tolerance}")
     if user_pose_path is None or ref_pose_path is None:
@@ -135,18 +160,18 @@ def main(tolerance, ref_pose_path, user_pose_path):
     average_similarity = np.mean(similarities) # TODO: Pending for changes, valuing lower body part more?
     print(f"Score: {average_similarity*100}")
 
-    # if average_similarity > 0.9:
-    #     message = "Great, you made it!"
-    #     out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Probably need a voice dir as well
-    #     # TODO: Make the playing of the file
-    #     print(f"Great, you made it!")
-    #     text_to_speech(message, out_path)
-    #     sys.exit()
+    if average_similarity > 0:
+        message = "Great, you made it!"
+        out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Probably need a voice dir as well
+        print(f"Great, you made it!")
+        text_to_speech(message, out_path)
+        play_wav_file(out_path)
+        sys.exit()
 
 
     for i, (similarity, angle_degrees) in enumerate(zip(similarities, angles_in_degrees)):
-        if angle_degrees < tolerance:
-            break
+        if (angle_degrees * 180 / math.pi) < tolerance:
+            continue
         else:
             if math.isnan(angle_degrees):
                 print(f"Angle (in degrees) between {name_list[i]} and reference pose: 0.0000")
@@ -154,17 +179,39 @@ def main(tolerance, ref_pose_path, user_pose_path):
                 print(f"Angle (in degrees) between {name_list[i]} and reference pose: {(angle_degrees * 180 / math.pi):.4f}")
     return
 
+# Backend Submodule test code
+# Main function takes in the user image path and a reference name, compare the two poses and provide output
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Taichine Comparison")
-    
-    # Add command-line arguments for your function parameters
+    # Parse cmdline input for test purpose
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--user_image", required = True)
+    parser.add_argument("--reference_pose", required = True)
     parser.add_argument("--tolerance", type=int, default=10, help="Tolerance value")
-    parser.add_argument("--ref_pose_path", type=str, default="D:/Workspace/Taichine/1_keypoints.json", help="Reference pose path")
-    parser.add_argument("--user_pose_path", type=str, default="D:/Workspace/Taichine/2_keypoints.json", help="User pose path")
-    
+
     args = parser.parse_args()
-    
-    main(args.tolerance, args.ref_pose_path, args.user_pose_path)
+
+    # Process user image with OpenPose
+    parseImageFromPath(args.user_image, "user_pose_data\\")
+
+    # Compare the poses
+    reference_path = "SampleOutput\\1\\" + args.reference_pose + "_keypoints.json"
+    user_path = "user_pose_data\\user_keypoints.json"
+
+    print("Comparing User data with " + reference_path)
+
+    compare_poses(reference_path, user_path)
+
+
+# if __name__ == "__main__":
+#     # Provide the 'tolerance' value as a command-line argument, it defaults to 10 degrees if not provided.
+#     if len(sys.argv) > 1:
+#         try:
+#             tolerance = float(sys.argv[1])
+#             compare_poses("1_keypoints.json", "2_keypoints.json", tolerance)
+#         except ValueError:
+#             print("Tolerance must be a valid number.")
+#     else:
+#         compare_poses("1_keypoints.json", "2_keypoints.json")  # Default tolerance of 0
 
 
 # TODO: Change this, this is currently a debug output
