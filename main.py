@@ -44,7 +44,7 @@ taichi_name = [
 ]
 
 # pose item
-class PoseItem(BoxLayout, ButtonBehavior):
+class PoseItem(ButtonBehavior, BoxLayout):
   id = StringProperty('')
   image = StringProperty('')
   label = StringProperty('')
@@ -81,6 +81,10 @@ class SettingScreen(Screen):
 # training screen
 class TrainingScreen(Screen):
   a = NumericProperty(10) 
+
+  def set_reference_image(self, seq_id, pos_id):
+    self.ids['reference_image'].source = './poses/' + seq_id + '/' + pos_id + '.png'
+    self.ids['reference_image'].reload()
 
   def capture(self):
     '''

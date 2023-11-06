@@ -159,8 +159,8 @@ ScreenManager:
           play: True
         
         Image:
+          id: reference_image
           size_hint: 0.45, 1
-          source: 'poses/01/1.png'
           keep_ratio: True
 
       BoxLayout: 
@@ -221,6 +221,7 @@ ScreenManager:
 
       Label:
         text: 'Volume'
+        color: 0, 0, 0, 1
         size_hint: 0.8, 0.2
         font_size: self.width * 0.1
         width: 80
@@ -234,6 +235,7 @@ ScreenManager:
 
       Label:
         text: 'Sensitivity'
+        color: 0, 0, 0, 1
         size_hint: 0.8, 0.2
         font_size: self.width * 0.1
         width: 80
@@ -362,17 +364,7 @@ ScreenManager:
         id: upload_label
         text: "Please Upload a Custom Pose!"
         font_size: 32
-      Label:
-        id: upload_label
-        text: "Please Upload a Custom Pose!"
-        font_size: 32
-
         color: 0, 0, 0, 1
-        color: 0, 0, 0, 1
-
-      
-      Button:
-        id: upload_button
       
       Button:
         id: upload_button
@@ -392,7 +384,7 @@ ScreenManager:
           center_y: self.parent.center_y
           size_int: 0.1, 0.1
             
-<PoseItem>:
+<PoseItem@ButtonBehavior+BoxLayout>:
   canvas:
     Color:
       rgb: 0.2, 0.2, 0.2
@@ -404,8 +396,10 @@ ScreenManager:
   size_hint: 1, None
   height: 80   
   on_press: 
-    root.manager.transition.direction = 'left'
-    root.manager.current = 'training'  
+    current_screen = root.parent.parent.parent.parent
+    current_screen.manager.get_screen('training').set_reference_image(root.id, '1')
+    current_screen.manager.transition.direction = 'left'
+    current_screen.manager.current = 'training'  
     
   Image:
     size_hint: 0.15, 1
