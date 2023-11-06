@@ -13,6 +13,8 @@ from time import strftime
 
 from plyer import filechooser
 from os import system, getcwd
+from plyer import filechooser
+from os import system, getcwd
 from os import listdir
 from os.path import join, isfile
 
