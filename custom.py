@@ -1,4 +1,5 @@
 import kivy
+from "..\\openpose_env\\openpose\\openpose_inter.py" import parseImageFromPath
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
@@ -18,9 +19,8 @@ from kivy.properties import StringProperty
 import os
 
 #
-# TODO:
-# Architect File Chooser Icon View thing
-#
+# TODO: edit folder to use poses
+# 
 
 Builder.load_file("upload_button.kv")
 
@@ -34,7 +34,9 @@ class upload_image_widget(Screen):
 
     def right_button(self):
         print("\n\nRIGHT button pressed!\n\n")
-
+        for children in self.children:
+            print(children)
+        # print(self.parent)
     pass
 
 
@@ -42,7 +44,7 @@ class upload_layout(Screen):
 
     def __init__(self, **kwargs):
         self.curr_dir = curr_dir = os.getcwd()
-        self.poses_folder = f"{curr_dir}\\user_poses"
+        self.poses_folder = f"{curr_dir}\\poses"
         print("self.curr_dir: ", self.curr_dir)
         super().__init__(**kwargs)
 
@@ -61,7 +63,7 @@ class upload_layout(Screen):
         for i in range(len(selection)):
             src_split_list = src[i].split('\\')
             filename = src_split_list[-1] 
-            dest.append(f"{self.curr_dir}\\user_poses\\{filename}")
+            dest.append(f"{self.curr_dir}\\poses\\{filename}")
 
         
         for j in range(len(dest)):
@@ -72,8 +74,6 @@ class upload_layout(Screen):
         # print(selection[0])
     
         print("done")
-
-   
 
 
 class customApp(App):
