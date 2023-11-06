@@ -59,14 +59,14 @@ class SelectionScreen(Screen):
     def set_all(self):
       menu = self.ids['menu_grid']
       menu.bind(minimum_height=menu.setter('height'))
-      allseqs = listdir('./poses')
+      allseqs = listdir('.\\poses')
       allseqs.sort()
 
       for seq in allseqs:
-        if isfile(join('./poses', seq, '1.png')):
+        if isfile(join('.\\poses', seq, '1.png')):
           pose = PoseItem()
           pose.id = seq
-          pose.image = './poses/' + seq + '/1.png'
+          pose.image = '.\\poses\\' + seq + '\\1.png'
           pose.label = seq + ' - ' + taichi_name[int(seq) - 1]
           print(pose)
           menu.add_widget(pose)  
@@ -83,7 +83,7 @@ class TrainingScreen(Screen):
   a = NumericProperty(10) 
 
   def set_reference_image(self, seq_id, pos_id):
-    self.ids['reference_image'].source = './poses/' + seq_id + '/' + pos_id + '.png'
+    self.ids['reference_image'].source = '.\\poses\\' + seq_id + '\\' + pos_id + '.png'
     self.ids['reference_image'].reload()
 
   def capture(self):
