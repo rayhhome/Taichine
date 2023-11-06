@@ -11,6 +11,7 @@ numpy==1.26.1
 opencv-python==4.8.1.78
 Pillow==10.0.1
 platformdirs==3.11.0
+plyer==2.1.0
 Pygments==2.16.1
 pyperclip==1.8.2
 requests==2.31.0
