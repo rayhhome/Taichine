@@ -114,7 +114,7 @@
         size_hint: 0.15, 0.8
         font_size: self.height * 0.35
         pos_hint: {'center_y': 0.5, 'center_x': 0.1}
-        on_press: 
+        on_press:     
           root.manager.transition.direction = 'right'
           root.manager.current = 'selection'
 
@@ -128,6 +128,11 @@
         on_press: root.capture()
 
     GridLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size      
       size_hint: 1, 0.4
       pos_hint: {'top': 0.8}
       cols: 2
@@ -148,6 +153,11 @@
         keep_ratio: True
 
     BoxLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size      
       size_hint: 1, 0.4
       pos_hint: {'y': 0}
       orientation: 'horizontal'
@@ -315,6 +325,11 @@
           root.manager.current = 'menu'
   
     BoxLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size      
       id: layout
       orientation: "vertical"
       size_hint: 1, 0.8
@@ -349,7 +364,7 @@
           root.select_file()
             
         Image:
-          id:button_image
+          id: button_image
           source: 'icons/file-upload_white.png'
           center_x: self.parent.center_x
           center_y: self.parent.center_y
