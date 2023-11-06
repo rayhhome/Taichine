@@ -12,8 +12,7 @@ from kivy.core.window import Window
 from time import strftime
 
 from plyer import filechooser
-from os import system, getcwd
-from os import listdir
+from os import system, getcwd, listdir, chdir
 from os.path import join, isfile
 
 taichi_name = [
@@ -142,7 +141,9 @@ class CustomScreen(Screen):
             print("dest: ", dest[j])
             system(cmd)
         # print(selection[0])
-    
+
+        chdir(self.curr_dir)
+        
         print("done")
 
 class TaichineApp(App):
