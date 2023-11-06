@@ -64,6 +64,9 @@
         font_size: 40
         text: 'Custom Poses Upload'
         bold: True
+        on_press:
+          root.manager.transition.direction = 'left'
+          root.manager.current = 'custom'
 
       Button:
         height: 110
@@ -111,6 +114,9 @@
         size_hint: 0.15, 0.8
         font_size: self.height * 0.35
         pos_hint: {'center_y': 0.5, 'center_x': 0.1}
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'selection'
 
       Button:
         id: capture
@@ -264,7 +270,7 @@
         Rectangle:
           size: self.size
       size_hint: 1, 0.8
-      pos_hint: {'bottom': 0, 'center_x': 0.5}
+      pos_hint: {'bottom': 0, 'center_x': 0.5} 
 
       Button:
         text: 'Pose 1'
@@ -274,3 +280,79 @@
           root.manager.current = 'training'
 
 
+<CustomScreen>:
+  name:'custom'
+  id: upload_widget
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Upload'
+        color: 1, 1, 1, 1
+        font_name: 'SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+      
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'menu'
+  
+    BoxLayout:
+      id: layout
+      orientation: "vertical"
+      size_hint: 1, 0.8
+      
+      canvas.before:
+        Rectangle:
+          pos: self.pos
+          size: self.size
+          Color:
+            rgba: 1, 1, 1, 1
+      
+      padding: 50
+      spacing: 20
+
+      Label:
+        id: upload_label
+        text: "Please Upload a Custom Pose!"
+        font_size: 32
+
+        color: 0, 0, 0, 1
+
+      
+      Button:
+        id: upload_button
+
+        size_hint: 0.2, 0.2
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        background_color: 255,255,255,1
+        # background_normal: 'icons/file-upload_white.png'
+        on_press: 
+          # root.manager.current = "selection_screen"
+          root.select_file()
+            
+        Image:
+          id:button_image
+          source: 'icons/file-upload_white.png'
+          center_x: self.parent.center_x
+          center_y: self.parent.center_y
+          size_int: 0.1, 0.1
+              
+            
