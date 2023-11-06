@@ -97,7 +97,7 @@
       pos_hint: {'top': 1, 'center_x': 0.5}
 
       Label:
-        text: 'Your score:'
+        text: 'Your score: 100'
         color: 1, 1, 1, 1
         font_name: 'SEVESBRG'      
         size: self.texture_size
@@ -108,32 +108,49 @@
       Button:
         text: 'Back'
         color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
+        size_hint: 0.15, 0.8
         font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
-        bold: True
-        on_press: 
-          root.manager.transition.direction = 'right'
-          root.manager.current = 'selection'
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
 
-    BoxLayout:
+      Button:
+        id: capture
+        text: 'Capture'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.8
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.5, 'center_x': 0.9}
+        on_press: root.capture()
+
+    GridLayout:
       size_hint: 1, 0.4
-      pos_hint: {'center_y': 0.7}
-      orientation: 'horizontal'
+      pos_hint: {'top': 0.8}
+      cols: 2
       padding: 10
-      spacing: 10
+      spacing: 30
 
       Camera:
         id: camera
+        size_hint: 0.45, 1
         resolution: (640, 480)
-        play: False
+        allow_stretch: True
+        keep_ratio: True
+        play: True
+      
+      Image:
+        size_hint: 0.45, 1
+        source: 'poses/1/1.png'
+        keep_ratio: True
 
     BoxLayout:
       size_hint: 1, 0.4
-      pos_hint: {'bottom': 0}
+      pos_hint: {'y': 0}
       orientation: 'horizontal'
       padding: 10
       spacing: 10
+
+      Image:
+        source: 'image0.png'
+        keep_ratio: True
 
 <SettingScreen>:
   name: 'setting'
@@ -239,35 +256,21 @@
           root.manager.transition.direction = 'right'
           root.manager.current = 'menu'
       
-    GridLayout:
+    BoxLayout:
       id: menu_grid
       canvas:
         Color:
           rgb: 0.8, 0.8, 0.8
         Rectangle:
           size: self.size
-      padding: 50, 10
-      spacing: 35, 10
       size_hint: 1, 0.8
-      pos_hint: {'bottom': 0, 'center_x': 0.5} 
-      height: 500
-      rows: 4
-      cols: 4
+      pos_hint: {'bottom': 0, 'center_x': 0.5}
 
-    AnchorLayout:
-      canvas:
-        Color:
-          rgb: 0.8, 0.8, 0.8
-        Rectangle:
-          size: self.size    
-      anchor_x: 'right'
-      anchor_y: 'bottom'
-      height: 15
-      size_hint: 0.2, 0.05
+      Button:
+        text: 'Pose 1'
+        color: 1, 1, 1, 1
+        on_press: 
+          root.manager.transition.direction = 'left'
+          root.manager.current = 'training'
 
-      Label:
-        text: 'Next Page'
-        font_size: 20
-        color: 1, 1, 1, 1    
-        size_hint: None, None
-        bold: True
+
