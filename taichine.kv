@@ -70,6 +70,9 @@ ScreenManager:
         on_press:
           root.manager.transition.direction = 'left'
           root.manager.current = 'custom'
+        on_press:
+          root.manager.transition.direction = 'left'
+          root.manager.current = 'custom'
 
       Button:
         height: 110
@@ -359,9 +362,17 @@ ScreenManager:
         id: upload_label
         text: "Please Upload a Custom Pose!"
         font_size: 32
+      Label:
+        id: upload_label
+        text: "Please Upload a Custom Pose!"
+        font_size: 32
 
         color: 0, 0, 0, 1
+        color: 0, 0, 0, 1
 
+      
+      Button:
+        id: upload_button
       
       Button:
         id: upload_button
