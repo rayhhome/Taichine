@@ -2,13 +2,18 @@ from kivy.app import App
 from kivy.properties import StringProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.core.window import Window
+from kivy.uix.textinput import TextInput 
+from kivy.properties import ObjectProperty
 from plyer import filechooser
 from os import system, getcwd
 from os import listdir
 from os.path import join, isfile
+import os
 
+confirm_selection = None
 # pose item
 # class PoseItem(ButtonBehavior, Image):
 #   id = StringProperty('')
@@ -43,29 +48,60 @@ class CustomScreen(Screen):
     def select_file(self):
         system(f"mkdir {self.poses_folder}")
         filechooser.open_file(on_selection = self.selected)
-        
-        # path = filechooser.open_file(title="Choose an Image to Upload!", 
-        #                      filters=[("PNG Files", "*.png")])
     
     def selected(self, selection):
-        src = selection
-        dest = []
-        print("self.curr_dir: ", self.curr_dir)
         
-        for i in range(len(selection)):
-            src_split_list = src[i].split('\\')
-            filename = src_split_list[-1] 
-            dest.append(f"{self.curr_dir}\\user_poses\\{filename}")
+      src = selection
+      globals()['confirm_selection'] = src[0]
+      print("globals()['confirm_selection']: ", globals()["confirm_selection"])
+      dest = []
+      print("self.curr_dir: ", self.curr_dir)
+      
+      for i in range(len(selection)):
+          src_split_list = src[i].split('\\')
+          filename = src_split_list[-1] 
+          dest.append(f"{self.curr_dir}\\user_poses\\{filename}")
+      
+      print("src: ", src)
+      for j in range(len(dest)):
+        if os.name == 'nt':  # Windows
+          cmd = f'copy "{src[j]}" "{dest[j]}"'
+        else:  # Unix/Linux
+          cmd.replace("\\", "/")
+          cmd = f'cp "{src}" "{dst}"'
+          
+        print("src: ", src[j])
+        print("dest: ", dest[j])
+        system(cmd)
+      # print(selection[0])
+  
+      print("done")
 
-        
-        for j in range(len(dest)):
-            cmd = f'copy "{src[j]}" "{dest[j]}"'
-            print("src: ", src[j])
-            print("dest: ", dest[j])
-            system(cmd)
-        # print(selection[0])
+class ConfirmScreen(Screen):
+
+  def __init__(self, **kwargs):
+
+    super(ConfirmScreen, self).__init__(**kwargs)
+    self.filename=""
+    # self.textbox = None
+  
+  
+
+  def on_pre_enter(self, *largs):
     
-        print("done")
+    # print("new screen globals()['confirm_selection']: ", globals()['confirm_selection'])
+    #  height=30,
+    def on_enter(instance): #, value
+      print("value: ", instance.text)
+    # self.on_enter = on_enter()
+    textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.7}, cursor_blink=True, multiline=False)
+    textbox.bind(on_text_validate=on_enter)
+    self.add_widget(textbox)
+    src_split_list = confirm_selection.split('\\')
+    filename = src_split_list[-1]
+    # print("filename: ", filename)
+    self.display_image = Image(source=confirm_selection, size_hint=(0.3, 0.3), pos_hint={'center_x': 0.5, 'center_y': 0.4})
+    self.add_widget(self.display_image)
 
 class TaichineApp(App):
   def build(self):
@@ -76,6 +112,7 @@ class TaichineApp(App):
     smanager.add_widget(SettingScreen())
     smanager.add_widget(TrainingScreen())
     smanager.add_widget(CustomScreen())
+    smanager.add_widget(ConfirmScreen())
     # allseqs = listdir('./poses')
     # for seq in allseqs:
     #   if isfile(join('./poses', seq)):

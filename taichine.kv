@@ -277,46 +277,154 @@
 
 <CustomScreen>:
   name:'custom'
-  id: upload_widget
-  BoxLayout:
-    id: layout
-    orientation: "vertical"
-    size: root.width, root.height
-    
-    canvas.before:
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
       Rectangle:
-        pos: self.pos
         size: self.size
+
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'y': 0.8, 'center_x': 0.5}
+
+      Label:
+        text: 'Upload'
+        color: 1, 1, 1, 1
+        font_name: 'SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+      
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'menu'
+
+    BoxLayout:
+      canvas:
         Color:
-          rgba: 1, 1, 1, 1
-    
-    padding: 50
-    spacing: 20
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size      
+      orientation: "vertical"
+      size_hint: 1, 0.8
+      pos_hint: {'y': 0, 'center_x': 0.5}
+      
+      canvas.before:
+        Rectangle:
+          pos: self.pos
+          size: self.size
+          Color:
+            rgba: 1, 1, 1, 1
+      
+      padding: 50
+      spacing: 20
 
-    Label:
-      id: upload_label
-      text: "Please Upload a Custom Pose!"
-      font_size: 32
+      Label:
+        text: "Please Upload a Custom Pose!"
+        font_size: 32
+        color: 0, 0, 0, 1
+      
+      FloatLayout:
+        size_hint: 0.5, 0.5
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
 
-      color: 0, 0, 0, 1
-
-    
-    Button:
-      id: upload_button
-
-      size_hint: 0.2, 0.2
-      pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-      background_color: 255,255,255,1
-      # background_normal: 'icons/file-upload_white.png'
-      on_press: 
-        # root.manager.current = "selection_screen"
-        root.select_file()
-          
-      Image:
-        id:button_image
-        source: 'icons/file-upload_white.png'
-        center_x: self.parent.center_x
-        center_y: self.parent.center_y
-        size_int: 0.1, 0.1
+        Button:
+          id: upload_button
+          size_hint: 1, 1
+          pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+          background_color: 255,255,255,1
+          # background_normal: 'icons/file-upload_white.png'
+          on_press: 
+            # root.manager.current = "selection_screen"
+            root.select_file()
+            root.manager.transition.direction = 'right'
+            root.manager.current = 'confirm'
             
-            
+              
+        Image:
+          id: button_image
+          size_hint: 1, 1
+          pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+          source: "icons/file-upload_white.png"
+
+<ConfirmScreen>:
+  name:'confirm'
+
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'y': 0.8, 'center_x': 0.5}
+
+      Label:
+        text: 'Confirm'
+        color: 1, 1, 1, 1
+        font_name: 'SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+        background_color: 0, 1, 0, 1
+      
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'custom'
+
+    FloatLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size      
+      orientation: "vertical"
+      size_hint: 1, 0.8
+      pos_hint: {'y': 0, 'center_x': 0.5}
+      
+      canvas.before:
+        Rectangle:
+          pos: self.pos
+          size: self.size
+          Color:
+            rgba: 1, 1, 1, 1
+      
+      padding: 50
+      spacing: 20
+
+      
+      # Image:
+      #   source: confirm_selection
+      #   size_hint: 0.3, 0.3
+      #   pos_hint: {'center_x': 0.5, 'center_y': 0.2}
+      Button:
+        id: confirm_button
+        text: "Confirm"
+        size_hint: 0.1, 0.1
+        pos_hint: {'center_x': 0.5, 'center_y': 0.1}
+        background_color: 0,1,0,1
+        # background_normal: 'icons/file-upload_white.png'
+        # on_press: 
+          # root.manager.current = "selection_screen"
+          # root.manager.transition.direction = 'right'
+          # root.manager.current = 'confirm'
+          # root.select_file()
