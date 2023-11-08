@@ -6,14 +6,14 @@ from kivy.properties import StringProperty, NumericProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.animation import Animation
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen
 from kivy.core.window import Window
 
 from time import strftime
 
 from plyer import filechooser
 from os import system, getcwd, listdir, chdir
-from os.path import join, isfile
+from os.path import join, isfile, split
 
 taichi_name = [
   "Commence form",
@@ -55,23 +55,24 @@ class MenuScreen(Screen):
 
 # selection screen
 class SelectionScreen(Screen):
-    def set_all(self):
-      menu = self.ids['menu_grid']
-      menu.bind(minimum_height=menu.setter('height'))
-      allseqs = listdir('.\\poses')
-      allseqs.sort()
+  def set_all(self):
+    menu = self.ids['menu_grid']
+    menu.bind(minimum_height=menu.setter('height'))
+    allseqs = listdir(join('.','poses'))
+    print(join('.','poses'))
+    allseqs.sort()
 
-      for seq in allseqs:
-        if isfile(join('.\\poses', seq, '1.png')):
-          pose = PoseItem()
-          pose.id = seq
-          pose.image = '.\\poses\\' + seq + '\\1.png'
-          pose.label = seq + ' - ' + taichi_name[int(seq) - 1]
-          print(pose)
-          menu.add_widget(pose)  
-        else:
-          print('not a file')
-    pass
+    for seq in allseqs:
+      if isfile(join('.', 'poses', seq, '1.png')):
+        pose = PoseItem()
+        pose.id = seq
+        pose.image = join('.', 'poses', seq, '1.png')
+        pose.label = seq + ' - ' + taichi_name[int(seq) - 1]
+        print(pose)
+        menu.add_widget(pose)  
+      else:
+        print('not a file')
+  pass
 
 # setting screen
 class SettingScreen(Screen):
@@ -82,7 +83,7 @@ class TrainingScreen(Screen):
   a = NumericProperty(10) 
 
   def set_reference_image(self, seq_id, pos_id):
-    self.ids['reference_image'].source = '.\\poses\\' + seq_id + '\\' + pos_id + '.png'
+    self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id+'.png')
     self.ids['reference_image'].reload()
 
   def capture(self):
@@ -111,43 +112,44 @@ class TrainingScreen(Screen):
 
 class CustomScreen(Screen):
 
-    def __init__(self, **kwargs):
-        self.curr_dir = curr_dir = getcwd()
-        self.poses_folder = f"{curr_dir}\\user_poses"
-        print("self.curr_dir: ", self.curr_dir)
-        super().__init__(**kwargs)
+  def __init__(self, **kwargs):
+    self.curr_dir = curr_dir = getcwd()
+    self.poses_folder = join(curr_dir, "user_poses")
+    print("self.curr_dir: ", self.curr_dir)
+    super().__init__(**kwargs)
 
-    def select_file(self):
-        system(f"mkdir {self.poses_folder}")
-        filechooser.open_file(on_selection = self.selected)
-        
-        # path = filechooser.open_file(title="Choose an Image to Upload!", 
-        #                      filters=[("PNG Files", "*.png")])
+  def select_file(self):
+    system(f"mkdir {self.poses_folder}")
+    filechooser.open_file(on_selection = self.selected)
     
-    def selected(self, selection):
-        src = selection
-        dest = []
-        print("self.curr_dir: ", self.curr_dir)
-        
-        for i in range(len(selection)):
-            src_split_list = src[i].split('\\')
-            filename = src_split_list[-1] 
-            dest.append(f"{self.curr_dir}\\user_poses\\{filename}")
+    # path = filechooser.open_file(title="Choose an Image to Upload!", 
+    #                      filters=[("PNG Files", "*.png")])
+    
+  def selected(self, selection):
+    src = selection
+    dest = []
+    print("self.curr_dir: ", self.curr_dir)
+    
+    for i in range(len(selection)):
+      src_split_list = split(src[i])
+      filename = src_split_list[1] 
+      dest.append(join(self.curr_dir, "user_poses", filename))
 
-        
-        for j in range(len(dest)):
-            cmd = f'copy "{src[j]}" "{dest[j]}"'
-            print("src: ", src[j])
-            print("dest: ", dest[j])
-            system(cmd)
-        # print(selection[0])
+  
+    for j in range(len(dest)):
+        cmd = f'copy "{src[j]}" "{dest[j]}"'
+        print("src: ", src[j])
+        print("dest: ", dest[j])
+        system(cmd)
+    # print(selection[0])
 
-        chdir(self.curr_dir)
+    chdir(self.curr_dir)
         
-        print("done")
+    print("done")
 
 class TaichineApp(App):
-  pass
+  def build(self):
+    Window.minimum_width, Window.minimum_height = (800, 600)
     
 if __name__ == '__main__':
   TaichineApp().run()
