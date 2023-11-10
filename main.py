@@ -15,6 +15,9 @@ from plyer import filechooser
 from os import system, getcwd, listdir, chdir
 from os.path import join, isfile, split
 
+Window.minimum_width = 800
+Window.minimum_height = 600
+
 taichi_name = [
   "Commence form",
   "Parting wild horse's mane (3 times)",
@@ -47,27 +50,40 @@ class PoseItem(ButtonBehavior, BoxLayout):
   id = StringProperty('')
   image = StringProperty('')
   label = StringProperty('')
+  mode = StringProperty('')
   pass
 
 # menu screen
 class MenuScreen(Screen):
   pass
 
+# mode screen, choose between integrated/custom poses
+class ModeScreen(Screen):
+  pass
+
 # selection screen
 class SelectionScreen(Screen):
+  mode = StringProperty('')
+
   def set_all(self):
+    if self.mode == 'integrated':
+      pose_dir = 'poses'
+    elif self.mode == 'custom':
+      pose_dir = 'user_poses'
     menu = self.ids['menu_grid']
     menu.bind(minimum_height=menu.setter('height'))
-    allseqs = listdir(join('.','poses'))
-    print(join('.','poses'))
+    allseqs = listdir(join('.', pose_dir))
+    print(join('.', pose_dir))
     allseqs.sort()
 
+    menu.clear_widgets()
     for seq in allseqs:
-      if isfile(join('.', 'poses', seq, '1.png')):
+      if isfile(join('.', pose_dir, seq, '1.png')):
         pose = PoseItem()
         pose.id = seq
-        pose.image = join('.', 'poses', seq, '1.png')
+        pose.image = join('.', pose_dir, seq, '1.png')
         pose.label = seq + ' - ' + taichi_name[int(seq) - 1]
+        pose.mode = self.mode
         print(pose)
         menu.add_widget(pose)  
       else:
@@ -80,10 +96,13 @@ class SettingScreen(Screen):
 
 # training screen
 class TrainingScreen(Screen):
-  a = NumericProperty(10) 
+  countdown = NumericProperty(10) 
 
-  def set_reference_image(self, seq_id, pos_id):
-    self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id+'.png')
+  def set_reference_image(self, mode, seq_id, pos_id):
+    if mode == 'integrated':
+      self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id+'.png')
+    elif mode == 'custom':
+      self.ids['reference_image'].source = join('.', 'user_poses', seq_id, pos_id+'.png')
     self.ids['reference_image'].reload()
 
   def capture(self):
@@ -91,7 +110,7 @@ class TrainingScreen(Screen):
     https://stackoverflow.com/questions/41937173/kivy-simple-countdown-minute-and-second-timer
     '''
     Animation.cancel_all(self)
-    self.anim = Animation(a=0, duration=self.a)
+    self.anim = Animation(countdown=0, duration=self.countdown)
 
     def finish_callback(animation, training_screen):
       '''
@@ -119,7 +138,7 @@ class CustomScreen(Screen):
     super().__init__(**kwargs)
 
   def select_file(self):
-    system(f"mkdir {self.poses_folder}")
+    system(f"mkdir -p {self.poses_folder}")
     filechooser.open_file(on_selection = self.selected)
     
     # path = filechooser.open_file(title="Choose an Image to Upload!", 
@@ -148,8 +167,7 @@ class CustomScreen(Screen):
     print("done")
 
 class TaichineApp(App):
-  def build(self):
-    Window.minimum_width, Window.minimum_height = (800, 600)
-    
+  pass 
+
 if __name__ == '__main__':
   TaichineApp().run()

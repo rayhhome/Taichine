@@ -2,6 +2,7 @@
 #
 ScreenManager:
   MenuScreen:
+  ModeScreen:
   SelectionScreen:
   TrainingScreen:
   SettingScreen:
@@ -22,7 +23,7 @@ ScreenManager:
       Label:
         size: self.texture_size
         text: "Taichine" 
-        font_name: 'SEVESBRG'
+        font_name: 'fonts/SEVESBRG'
         font_size: self.height
         italic: True
         size_hint: 1, 0.8
@@ -31,7 +32,7 @@ ScreenManager:
       Label:
         size: self.texture_size
         text:"Your personal Tai Chi trainer" 
-        font_name: 'SEVESBRG'
+        font_name: 'fonts/SEVESBRG'
         font_size: self.height * 0.5
         italic: True
         size_hint: 1, 0.3
@@ -51,18 +52,17 @@ ScreenManager:
       pos_hint: {'y': 0}
 
       Button:
-        height: 110
+        size_hint: 1, 0.25
         text_size: None, None
         font_size: 40
         text: 'Pose Selection'
         bold: True
         on_press:  
-          root.manager.get_screen('selection').set_all()
           root.manager.transition.direction = 'left'
-          root.manager.current = 'selection'
+          root.manager.current = 'mode'
 
       Button:
-        height: 110
+        size_hint: 1, 0.25
         text_size: None, None
         font_size: 40
         text: 'Custom Poses Upload'
@@ -70,12 +70,9 @@ ScreenManager:
         on_press:
           root.manager.transition.direction = 'left'
           root.manager.current = 'custom'
-        on_press:
-          root.manager.transition.direction = 'left'
-          root.manager.current = 'custom'
 
       Button:
-        height: 110
+        size_hint: 1, 0.25
         text_size: None, None
         font_size: 40
         text: 'Options'
@@ -85,12 +82,131 @@ ScreenManager:
           root.manager.current = 'setting'
 
       Button:
-        height: 110
+        size_hint: 1, 0.25
         text_size: None, None
         font_size: 40
         text: 'Quit'
         bold: True
         on_press: App.get_running_app().stop()
+
+<ModeScreen>:
+  name: 'mode'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+    
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Choose your mode'
+        color: 1, 1, 1, 1
+        font_name: 'fonts/SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'menu'
+      
+  BoxLayout:
+    size_hint: 1, 0.8
+    pos_hint: {'center_x': 0.5, 'y': 0}
+    orientation: 'vertical'
+
+    Button:
+      size_hint: 1, 0.5
+      text_size: None, None
+      font_size: 40
+      text: "Yang Style 24-form Tai Chi Training"
+      bold: True
+      on_press: 
+        root.manager.get_screen('selection').mode = 'integrated'
+        root.manager.get_screen('selection').set_all()
+        root.manager.transition.direction = 'left'
+        root.manager.current = 'selection'
+
+    Button:
+      size_hint: 1, 0.5
+      text_size: None, None
+      font_size: 40
+      text: "Uploaded Custom Poses"
+      bold: True
+      on_press: 
+        root.manager.get_screen('selection').mode = 'custom'
+        root.manager.get_screen('selection').set_all()
+        root.manager.transition.direction = 'left'
+        root.manager.current = 'selection'
+
+<SelectionScreen>:
+  name: 'selection'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Selection Your Training'
+        color: 1, 1, 1, 1
+        font_name: 'fonts/SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+      
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.25
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        bold: True
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'mode'
+    
+    FloatLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size
+      size_hint: 1, 0.8
+      pos_hint: {'y': 0, 'center_x': 0.5}
+
+    ScrollView:
+      size_hint: 1, 0.8
+
+      GridLayout:
+        id: menu_grid
+        canvas:
+          Color:
+            rgb: 0.2, 0.2, 0.2
+          Rectangle:
+            size: self.size
+        cols: 1
+        spacing: 10
+        size_hint: 1, None
+        pos_hint: {'bottom': 0, 'center_x': 0.5}
 
 <TrainingScreen>:
   name: 'training'
@@ -108,7 +224,7 @@ ScreenManager:
       Label:
         text: 'Your score: 100'
         color: 1, 1, 1, 1
-        font_name: 'SEVESBRG'      
+        font_name: 'fonts/SEVESBRG'      
         size: self.texture_size
         font_size: self.height * 0.5
         pos_hint: {'center_y': 0.3, 'center_x': 0.5}
@@ -159,7 +275,6 @@ ScreenManager:
         Image:
           id: reference_image
           size_hint: 0.45, 1
-          keep_ratio: True
 
       BoxLayout: 
         size_hint: 1, 0.5
@@ -170,7 +285,6 @@ ScreenManager:
 
         Image:
           source: 'image0.png'
-          keep_ratio: True
 
 <SettingScreen>:
   name: 'setting'
@@ -188,7 +302,7 @@ ScreenManager:
       Label:
         text: 'Setting'
         color: 1, 1, 1, 1
-        font_name: 'SEVESBRG'      
+        font_name: 'fonts/SEVESBRG'      
         size: self.texture_size
         font_size: self.height * 0.5
         pos_hint: {'center_y': 0.3, 'center_x': 0.5}
@@ -245,64 +359,6 @@ ScreenManager:
         step: 1
         orientation: 'horizontal'
 
-<SelectionScreen>:
-  name: 'selection'
-  FloatLayout:
-    canvas:
-      Color:
-        rgb: 0.6, 0.8, 0.8
-      Rectangle:
-        size: self.size
-
-    FloatLayout:
-      size_hint: 1, 0.2
-      pos_hint: {'top': 1, 'center_x': 0.5}
-
-      Label:
-        text: 'Selection Your Training'
-        color: 1, 1, 1, 1
-        font_name: 'SEVESBRG'      
-        size: self.texture_size
-        font_size: self.height * 0.5
-        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
-        bold: True
-      
-      Button:
-        text: 'Back'
-        color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
-        font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
-        bold: True
-        on_press: 
-          root.manager.transition.direction = 'right'
-          root.manager.current = 'menu'
-    
-    FloatLayout:
-      canvas:
-        Color:
-          rgb: 0.8, 0.8, 0.8
-        Rectangle:
-          size: self.size
-      size_hint: 1, 0.8
-      pos_hint: {'y': 0, 'center_x': 0.5}
-
-
-    ScrollView:
-      size_hint: 1, 0.8
-
-      GridLayout:
-        id: menu_grid
-        canvas:
-          Color:
-            rgb: 0.2, 0.2, 0.2
-          Rectangle:
-            size: self.size
-        cols: 1
-        spacing: 10
-        size_hint: 1, None
-        pos_hint: {'bottom': 0, 'center_x': 0.5}
-
 <CustomScreen>:
   name:'custom'
   FloatLayout:
@@ -319,7 +375,7 @@ ScreenManager:
       Label:
         text: 'Upload'
         color: 1, 1, 1, 1
-        font_name: 'SEVESBRG'      
+        font_name: 'fonts/SEVESBRG'      
         size: self.texture_size
         font_size: self.height * 0.5
         pos_hint: {'center_y': 0.3, 'center_x': 0.5}
@@ -381,7 +437,7 @@ ScreenManager:
           pos_hint: {'center_x': 0.5, 'center_y': 0.5}
           source: "icons/file-upload_white.png"
             
-<PoseItem@ButtonBehavior+BoxLayout>:
+<PoseItem>:
   canvas:
     Color:
       rgb: 0.2, 0.2, 0.2
@@ -394,9 +450,9 @@ ScreenManager:
   height: 80   
   on_press: 
     current_screen = root.parent.parent.parent.parent
-    current_screen.manager.get_screen('training').set_reference_image(root.id, '1')
+    current_screen.manager.get_screen('training').set_reference_image(root.mode, root.id, '1')
     current_screen.manager.transition.direction = 'left'
-    current_screen.manager.current = 'training'  
+    current_screen.manager.current = 'training'
     
   Image:
     size_hint: 0.15, 1
