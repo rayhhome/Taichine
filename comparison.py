@@ -8,7 +8,7 @@ import argparse
 from OpenPoseInter import parseImageFromPath
 import pygame
 
-
+# Prereq: Opened folder in Openpose Root Dir
 def play_wav_file(file_path):
     pygame.init()
     pygame.mixer.init()
@@ -67,26 +67,45 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     local_keypoints = local_data["people"][0]["pose_keypoints_2d"]
 
+    lhand_keypoints = input_data["people"][0]["hand_left_keypoints_2d"]
+
+    rhand_keypoints = input_data["people"][0]["hand_right_keypoints_2d"]
+
+    local_lhand_keypoints = local_data["people"][0]["hand_left_keypoints_2d"]
+
+    local_rhand_keypoints = local_data["people"][0]["hand_right_keypoints_2d"]
+
+
     # Ensure the two lists have the same length
     if len(input_keypoints) != len(local_keypoints):
         raise ValueError("Keypoint lists have different lengths.")
+    
+    if len(lhand_keypoints) != len(local_lhand_keypoints):
+        raise ValueError("Left Hand Keypoint lists have different lengths.")
+    
+    if len(rhand_keypoints) != len(local_rhand_keypoints):
+        raise ValueError("Right Hand Keypoint lists have different lengths.")
 
 
     # Reshape the arrays to have shape (n, 3), where n is the number of keypoints
     input_keypoints = np.array(input_keypoints).reshape(-1, 3)
     local_keypoints = np.array(local_keypoints).reshape(-1, 3)
+    lhand_keypoints = np.array(lhand_keypoints).reshape(-1, 3)
+    rhand_keypoints = np.array(rhand_keypoints).reshape(-1, 3)
+    local_lhand_keypoints = np.array(local_lhand_keypoints).reshape(-1, 3)
+    local_rhand_keypoints = np.array(local_rhand_keypoints).reshape(-1, 3)
 
     # Remove confidence intervals prior to comparison
     input_keypoints = input_keypoints[:, :2]
     local_keypoints = local_keypoints[:, :2]
-
-    # Only want keypoints 0-14, first 15 entries
-    input_keypoints = input_keypoints[:15]
-    local_keypoints = local_keypoints[:15]
+    lhand_keypoints = lhand_keypoints[:, :2]
+    rhand_keypoints = rhand_keypoints[:, :2]
+    local_lhand_keypoints = local_lhand_keypoints[:, :2]
+    local_rhand_keypoints = local_rhand_keypoints[:, :2]
 
     name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
                "Left_Lowerarm", "Upper_Body", "Left_Waist", "Left_Thigh", "Left_Calf", "Right_Waist",
-                "Right_Thigh", "Right_Calf"]
+                "Right_Thigh", "Right_Calf", "Left_Feet", "Right_Feet"]
     
     # Defining all user inputs
     head_torso = input_keypoints[0] - input_keypoints[1]
@@ -103,13 +122,15 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     waist_rlegtop = input_keypoints[8] - input_keypoints[12]
     rlegtop_rlegmid = input_keypoints[12] - input_keypoints[13]
     rlegmid_rfoot = input_keypoints[13] - input_keypoints[14]
-
+    lfoot = input_keypoints[14] - input_keypoints[19]
+    rfoot = input_keypoints[11] - input_keypoints[22]
+    
     input_set = [
         tuple(head_torso), tuple(torso_rarmtop), tuple(rarmtop_rarmmid),
         tuple(rarmmid_rhand), tuple(torso_larmtop), tuple(larmtop_larmmid),
         tuple(larmmid_lhand), tuple(torso_waist), tuple(waist_llegtop),
         tuple(llegtop_llegmid), tuple(llegmid_lfoot), tuple(waist_rlegtop),
-        tuple(rlegtop_rlegmid), tuple(rlegmid_rfoot)
+        tuple(rlegtop_rlegmid), tuple(rlegmid_rfoot), tuple(lfoot), tuple(rfoot)
     ]
 
     # Define All Local Inputs
@@ -127,14 +148,102 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     waist_rlegtopl = local_keypoints[8] - local_keypoints[12]
     rlegtop_rlegmidl = local_keypoints[12] - local_keypoints[13]
     rlegmid_rfootl = local_keypoints[13] - local_keypoints[14]
+    lfootl = local_keypoints[14] - local_keypoints[19]
+    rfootl = local_keypoints[11] - local_keypoints[22]
+
+    userisfist_left = False
+    userisfist_right = False
+    localisfist_left = False
+    localisfist_right = False  
 
     local_set = [
         tuple(head_torsol), tuple(torso_rarmtopl), tuple(rarmtop_rarmmidl),
         tuple(rarmmid_rhandl), tuple(torso_larmtopl), tuple(larmtop_larmmidl),
         tuple(larmmid_lhandl), tuple(torso_waistl), tuple(waist_llegtopl),
         tuple(llegtop_llegmidl), tuple(llegmid_lfootl), tuple(waist_rlegtopl),
-        tuple(rlegtop_rlegmidl), tuple(rlegmid_rfootl)
+        tuple(rlegtop_rlegmidl), tuple(rlegmid_rfootl), tuple(lfootl), tuple(rfootl)
     ]
+
+    lhand_set = [
+        tuple(lhand_keypoints[0]), tuple(lhand_keypoints[9]), tuple(lhand_keypoints[10]),
+        tuple(lhand_keypoints[11]), tuple(lhand_keypoints[12])
+    ]
+
+    rhand_set = [
+        tuple(rhand_keypoints[0]), tuple(rhand_keypoints[9]), tuple(rhand_keypoints[10]),
+        tuple(rhand_keypoints[11]), tuple(rhand_keypoints[12])
+    ]
+
+    local_lhand_set = [
+        tuple(local_lhand_keypoints[0]), tuple(local_lhand_keypoints[9]), tuple(local_lhand_keypoints[10]),
+        tuple(local_lhand_keypoints[11]), tuple(local_lhand_keypoints[12])
+    ]
+
+    local_rhand_set = [
+        tuple(local_rhand_keypoints[0]), tuple(local_rhand_keypoints[9]), tuple(local_rhand_keypoints[10]),
+        tuple(local_rhand_keypoints[11]), tuple(local_rhand_keypoints[12])
+    ]
+
+    # User input
+    lhand_x = [keypoint[0] for keypoint in lhand_set]
+    lhand_y = [keypoint[1] for keypoint in lhand_set]
+
+    rhand_x = [keypoint[0] for keypoint in rhand_set]
+    rhand_y = [keypoint[1] for keypoint in rhand_set]
+
+    # Checking for a general trend in x coordinates for both sets
+    lnot_fist_x = all(x <= y for x, y in zip(lhand_x, lhand_x[1:])) or all(x >= y for x, y in zip(lhand_x, lhand_x[1:]))
+    rnot_fist_x = all(x <= y for x, y in zip(rhand_x, rhand_x[1:])) or all(x >= y for x, y in zip(rhand_x, rhand_x[1:]))
+
+    # Checking for a general trend in y coordinates for both sets
+    lnot_fist_y = all(x <= y for x, y in zip(lhand_y, lhand_y[1:])) or all(x >= y for x, y in zip(lhand_y, lhand_y[1:]))
+    rnot_fist_y = all(x <= y for x, y in zip(rhand_y, rhand_y[1:])) or all(x >= y for x, y in zip(rhand_y, rhand_y[1:]))
+
+    luser_result = [lnot_fist_x, lnot_fist_y]
+    ruser_result = [rnot_fist_x, rnot_fist_y]
+
+    if all(luser_result):
+        userisfist_left = False
+    else:
+        userisfist_left = True
+    
+    if all(ruser_result):
+        userisfist_right = False
+    else:
+        userisfist_right = True
+
+    # Reference Handpose
+    lhand_xl = [keypoint[0] for keypoint in local_lhand_set]
+    lhand_yl = [keypoint[1] for keypoint in local_lhand_set]
+
+    rhand_xl = [keypoint[0] for keypoint in local_rhand_set]
+    rhand_yl = [keypoint[1] for keypoint in local_rhand_set]
+
+    # Checking for a general trend in x coordinates for both sets
+    lnot_fist_xl = all(x <= y for x, y in zip(lhand_xl, lhand_xl[1:])) or all(x >= y for x, y in zip(lhand_xl, lhand_xl[1:]))
+    rnot_fist_xl = all(x <= y for x, y in zip(rhand_xl, rhand_xl[1:])) or all(x >= y for x, y in zip(rhand_xl, rhand_xl[1:]))
+
+    # Checking for a general trend in y coordinates for both sets
+    lnot_fist_yl = all(x <= y for x, y in zip(lhand_yl, lhand_yl[1:])) or all(x >= y for x, y in zip(lhand_yl, lhand_yl[1:]))
+    rnot_fist_yl = all(x <= y for x, y in zip(rhand_yl, rhand_yl[1:])) or all(x >= y for x, y in zip(rhand_yl, rhand_yl[1:]))
+
+    luser_resultl = [lnot_fist_xl, lnot_fist_yl]
+    ruser_resultl = [rnot_fist_xl, rnot_fist_yl]
+
+    if all(luser_resultl):
+        localisfist_left = False
+    else:
+        localisfist_left = True
+    
+    if all(ruser_resultl):
+        localisfist_right = False
+    else:
+        localisfist_right = True
+
+    if localisfist_right != userisfist_right:
+        print("Check your Right Hand Posture!")
+    if localisfist_left != userisfist_left:
+        print("Check your Left Hand Posture!")
 
     similarities = []
     angles_in_degrees = []
@@ -160,14 +269,15 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     average_similarity = np.mean(similarities) # TODO: Pending for changes, valuing lower body part more?
     print(f"Score: {average_similarity*100}")
 
-    if average_similarity > 0:
+    if average_similarity > 0.9:
         message = "Great, you made it!"
         out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Probably need a voice dir as well
-        print(f"Great, you made it!")
+        print(f"Great, you made it! You mastered the pose.")
         text_to_speech(message, out_path)
         play_wav_file(out_path)
         sys.exit()
 
+    max_degrees = 0
 
     for i, (similarity, angle_degrees) in enumerate(zip(similarities, angles_in_degrees)):
         if (angle_degrees * 180 / math.pi) < tolerance:
@@ -177,6 +287,15 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                 print(f"Angle (in degrees) between {name_list[i]} and reference pose: 0.0000")
             else:
                 print(f"Angle (in degrees) between {name_list[i]} and reference pose: {(angle_degrees * 180 / math.pi):.4f}")
+        if angle_degrees > max_degrees:
+            max_degrees = angle_degrees
+            max_i = i
+    degrees = max(angles_in_degrees) * 180 / math.pi
+    worst_angle = round(degrees)
+    message = f"Your worst angle is {worst_angle} degrees at {name_list[max_i]}"
+    out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
+    text_to_speech(message, out_path)
+    play_wav_file(out_path)
     return
 
 # Backend Submodule test code
@@ -201,21 +320,9 @@ if __name__ == "__main__":
 
     compare_poses(reference_path, user_path)
 
+# TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
+# Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.
 
-# if __name__ == "__main__":
-#     # Provide the 'tolerance' value as a command-line argument, it defaults to 10 degrees if not provided.
-#     if len(sys.argv) > 1:
-#         try:
-#             tolerance = float(sys.argv[1])
-#             compare_poses("1_keypoints.json", "2_keypoints.json", tolerance)
-#         except ValueError:
-#             print("Tolerance must be a valid number.")
-#     else:
-#         compare_poses("1_keypoints.json", "2_keypoints.json")  # Default tolerance of 0
-
-
-# TODO: Change this, this is currently a debug output
-# Ask Eric for more dataseet and further analysis
 
 # TODO: Feedbacks of posture analysis, limb specific instructions.
 # Raise/Lower {Left/Right} {limb name}, by {x} degrees. I have all limbs labelled so should be fine.
