@@ -388,7 +388,7 @@
         pos_hint: {'center_y': 0.8, 'center_x': 0.1}
         bold: True
         on_press: 
-          root.manager.transition.direction = 'right'
+          root.manager.transition.direction = 'left'
           root.manager.current = 'custom'
 
     FloatLayout:
@@ -422,6 +422,10 @@
         size_hint: 0.1, 0.1
         pos_hint: {'center_x': 0.5, 'center_y': 0.1}
         background_color: 0,1,0,1
+        on_press: 
+          root.confirmed()
+          root.manager.transition.direction = 'left'
+          root.manager.current = 'custom'
         # background_normal: 'icons/file-upload_white.png'
         # on_press: 
           # root.manager.current = "selection_screen"
