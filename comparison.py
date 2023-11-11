@@ -294,31 +294,43 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     worst_angle = round(degrees)
     message = f"Your worst angle is {worst_angle} degrees at {name_list[max_i]}"
     out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
-    text_to_speech(message, out_path)
-    play_wav_file(out_path)
+    # text_to_speech(message, out_path)
+    # play_wav_file(out_path)
     return
 
-# Backend Submodule test code
-# Main function takes in the user image path and a reference name, compare the two poses and provide output
-if __name__ == "__main__":
-    # Parse cmdline input for test purpose
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--user_image", required = True)
-    parser.add_argument("--reference_pose", required = True)
-    parser.add_argument("--tolerance", type=int, default=10, help="Tolerance value")
-
-    args = parser.parse_args()
-
-    # Process user image with OpenPose
-    parseImageFromPath(args.user_image, "user_pose_data\\")
+# TODO @ Hongzhe: Need to implement file search for different references
+def backend_process ():
+    parseImageFromPath("user_input\\", "user_pose_data\\")
 
     # Compare the poses
-    reference_path = "SampleOutput\\1\\" + args.reference_pose + "_keypoints.json"
+    reference_path = "SampleOutput\\1\\1_keypoints.json"
     user_path = "user_pose_data\\user_keypoints.json"
 
     print("Comparing User data with " + reference_path)
 
     compare_poses(reference_path, user_path)
+
+# Backend Submodule test code
+# Main function takes in the user image path and a reference name, compare the two poses and provide output
+# if __name__ == "__main__":
+#     # Parse cmdline input for test purpose
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--user_image", required = True)
+#     parser.add_argument("--reference_pose", required = True)
+#     parser.add_argument("--tolerance", type=int, default=10, help="Tolerance value")
+
+#     args = parser.parse_args()
+
+#     # Process user image with OpenPose
+#     parseImageFromPath(args.user_image, "user_pose_data\\")
+
+#     # Compare the poses
+#     reference_path = "SampleOutput\\1\\" + args.reference_pose + "_keypoints.json"
+#     user_path = "user_pose_data\\user_keypoints.json"
+
+#     print("Comparing User data with " + reference_path)
+
+#     compare_poses(reference_path, user_path)
 
 # TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
 # Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.

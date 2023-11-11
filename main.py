@@ -1,3 +1,5 @@
+from comparison import backend_process
+
 import kivy
 kivy.require('2.2.1')
 
@@ -93,9 +95,16 @@ class TrainingScreen(Screen):
       camera = self.ids['camera']
       timestr = strftime("%Y%m%d_%H%M%S")
       camera.export_to_png("IMG_{}.png".format(timestr))
+      camera.export_to_png(".\\user_input\\user.png")
 
     self.anim.bind(on_complete=finish_callback)
-    self.anim.start(self) 
+    self.anim.start(self)
+
+    # Start backend processing
+    # TODO @ Ray: Need a parameter to know:
+    # 1. Whether it is user pose or default pose
+    # 2. The pose name to find the coordinates
+    backend_process()
 
   def on_a(self, instance, value):
     capture_button = self.ids['capture']
