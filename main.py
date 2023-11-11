@@ -18,33 +18,6 @@ from os.path import join, isfile, split
 Window.minimum_width = 800
 Window.minimum_height = 600
 
-taichi_name = [
-  "Commence form",
-  "Parting wild horse's mane (3 times)",
-  "White crane spreads its wings",
-  "Brush knee and press (3 times)",
-  "Play the lute",
-  "Repulse the monkey (4 times)",
-  "Grasp the sparrow's tail (left and right)",
-  "Single whip",
-  "Wave hands like clouds",
-  "Single whip",
-  "High pat on horse",
-  "Right heel kick",
-  "Strike opponent's ears with fists",
-  "Turn around, left heel kick",
-  "Snake creeps down",
-  "Golden rooster standing on left leg",
-  "Snake creeps down",
-  "Golden rooster standing on right leg",
-  "Fair lady works the shuttles (right and left)",
-  "Needles at sea bottom",
-  "Fan through back",
-  "Turn around, block, parry and punch",
-  "Withdraw and push",
-  "Cross hands and close form"
-]
-
 # pose item
 class PoseItem(ButtonBehavior, BoxLayout):
   id = StringProperty('')
@@ -71,9 +44,8 @@ class SelectionScreen(Screen):
     elif self.mode == 'custom':
       pose_dir = 'user_poses'
     menu = self.ids['menu_grid']
-    menu.bind(minimum_height=menu.setter('height'))
+    menu.bind(minimum_height = menu.setter('height'))
     allseqs = listdir(join('.', pose_dir))
-    print(join('.', pose_dir))
     allseqs.sort()
 
     menu.clear_widgets()
@@ -82,7 +54,7 @@ class SelectionScreen(Screen):
         pose = PoseItem()
         pose.id = seq
         pose.image = join('.', pose_dir, seq, '1.png')
-        pose.label = seq + ' - ' + taichi_name[int(seq) - 1]
+        pose.label = seq
         pose.mode = self.mode
         print(pose)
         menu.add_widget(pose)  
