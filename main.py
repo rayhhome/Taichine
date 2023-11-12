@@ -90,12 +90,13 @@ class TrainingScreen(Screen):
       '''
       https://kivy.org/doc/stable/examples/gen__camera__main__py.html
       '''
-      capture_button = self.ids['capture']      
+      capture_button = self.ids['capture']
       capture_button.text = "Capture"
       camera = self.ids['camera']
       timestr = strftime("%Y%m%d_%H%M%S")
-      camera.export_to_png("IMG_{}.png".format(timestr))
+      camera.export_to_png("user.png")
       camera.export_to_png(".\\user_input\\user.png")
+      backend_process()
 
     self.anim.bind(on_complete=finish_callback)
     self.anim.start(self)
@@ -104,7 +105,7 @@ class TrainingScreen(Screen):
     # TODO @ Ray: Need a parameter to know:
     # 1. Whether it is user pose or default pose
     # 2. The pose name to find the coordinates
-    backend_process()
+    
 
   def on_a(self, instance, value):
     capture_button = self.ids['capture']

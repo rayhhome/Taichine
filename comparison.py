@@ -4,6 +4,7 @@ import math
 import sys
 import subprocess
 import argparse
+import os
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 import pygame
@@ -308,7 +309,7 @@ def backend_process ():
 
     print("Comparing User data with " + reference_path)
 
-    compare_poses(reference_path, user_path)
+    return compare_poses(reference_path, user_path)
 
 # Backend Submodule test code
 # Main function takes in the user image path and a reference name, compare the two poses and provide output
