@@ -12,8 +12,13 @@ opencv-python==4.8.1.78
 Pillow==10.0.1
 platformdirs==3.11.0
 plyer==2.1.0
+progressbar2==4.2.0
+pygame==2.5.2
 Pygments==2.16.1
 pyperclip==1.8.2
+python-utils==3.8.1
 requests==2.31.0
+scipy==1.11.3
+typing_extensions==4.8.0
 urllib3==2.0.6
 virtualenv==20.24.5

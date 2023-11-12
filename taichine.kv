@@ -241,13 +241,13 @@ ScreenManager:
           root.manager.current = 'selection'
 
       Button:
-        id: capture
-        text: 'Capture'
+        id: start_button
+        text: 'Start'
         color: 1, 1, 1, 1
         size_hint: 0.15, 0.8
         font_size: self.height * 0.35
         pos_hint: {'center_y': 0.5, 'center_x': 0.9}
-        on_press: root.capture()
+        on_press: root.start_training()
 
     BoxLayout:
       canvas:
@@ -450,6 +450,7 @@ ScreenManager:
   height: 80   
   on_press: 
     current_screen = root.parent.parent.parent.parent
+    current_screen.manager.get_screen('training').mode = current_screen.mode
     current_screen.manager.get_screen('training').set_reference_image(root.mode, root.id, '1')
     current_screen.manager.transition.direction = 'left'
     current_screen.manager.current = 'training'
