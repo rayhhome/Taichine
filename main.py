@@ -120,7 +120,9 @@ class TrainingScreen(Screen):
     # Start backend processing
     # TODO @ Ray: Need a parameter to know:
     # 1. Whether it is user pose or default pose
+    #   Ray: to access the pose mode, use self.mode, which can be either "integrated" or "custom"
     # 2. The pose name to find the coordinates
+    #   Ray: to access the pose name, use self.current_pose, which can be "1.png", "2.png", "3.png"...
 
   def set_countdown(self, seconds):
     # Ray: set the value for the countdown timer
