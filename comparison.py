@@ -49,7 +49,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     print(f"Current Tolerance Angle: {tolerance}")
     if user_pose_path is None or ref_pose_path is None:
         print("Error: Please provide paths for user_pose and ref_pose.")
-        return
+        # return
 
     try:
         # Load and parse the JSON files
@@ -61,7 +61,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     except FileNotFoundError:
         print("Error: One or both of the provided JSON files not found.")
-        return
+        # return
 
     # Extract the keypoints from the JSON data
     input_keypoints = input_data["people"][0]["pose_keypoints_2d"]
@@ -79,13 +79,13 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     # Ensure the two lists have the same length
     if len(input_keypoints) != len(local_keypoints):
-        raise ValueError("Keypoint lists have different lengths.")
+        print("Keypoint lists have different lengths.")
     
     if len(lhand_keypoints) != len(local_lhand_keypoints):
-        raise ValueError("Left Hand Keypoint lists have different lengths.")
+        print("Left Hand Keypoint lists have different lengths.")
     
     if len(rhand_keypoints) != len(local_rhand_keypoints):
-        raise ValueError("Right Hand Keypoint lists have different lengths.")
+        print("Right Hand Keypoint lists have different lengths.")
 
 
     # Reshape the arrays to have shape (n, 3), where n is the number of keypoints
@@ -107,7 +107,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
                "Left_Lowerarm", "Upper_Body", "Left_Waist", "Left_Thigh", "Left_Calf", "Right_Waist",
                 "Right_Thigh", "Right_Calf", "Left_Feet", "Right_Feet"]
-    
+
+    body_parts = {
+        'head': ['Head'],
+        'upperbody': ['Upper_Body', 'Left_Waist', 'Right_Waist'], 
+        'arms': ['Right_Shoulder', 'Left_Shoulder', 'Right_Upperarm', 'Right_Lowerarm', 'Left_Upperarm', 'Left_Lowerarm'],
+        'legs': ['Left_Calf', 'Right_Calf', 'Left_Thigh', 'Right_Thigh'],
+        'feet': ['Left_Feet', 'Right_Feet']
+} 
     # Defining all user inputs
     head_torso = input_keypoints[0] - input_keypoints[1]
     torso_rarmtop = input_keypoints[1] - input_keypoints[2]
@@ -245,6 +252,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         print("Check your Right Hand Posture!")
     if localisfist_left != userisfist_left:
         print("Check your Left Hand Posture!")
+    # TODO: Voice output here or return to frontend to showcase issue
 
     similarities = []
     angles_in_degrees = []
@@ -272,13 +280,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     if average_similarity > 0.9:
         message = "Great, you made it!"
-        out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Probably need a voice dir as well
+        out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Designated Folder/Flash Storage
         print(f"Great, you made it! You mastered the pose.")
         text_to_speech(message, out_path)
         play_wav_file(out_path)
         sys.exit()
 
     max_degrees = 0
+    error_list = []
 
     for i, (similarity, angle_degrees) in enumerate(zip(similarities, angles_in_degrees)):
         if (angle_degrees * 180 / math.pi) < tolerance:
@@ -288,12 +297,26 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                 print(f"Angle (in degrees) between {name_list[i]} and reference pose: 0.0000")
             else:
                 print(f"Angle (in degrees) between {name_list[i]} and reference pose: {(angle_degrees * 180 / math.pi):.4f}")
+                error_list.append(name_list[i])
         if angle_degrees > max_degrees:
             max_degrees = angle_degrees
             max_i = i
     degrees = max(angles_in_degrees) * 180 / math.pi
     worst_angle = round(degrees)
+
+    # TODO: Instruction wording, use error_list and body_list above to give different instructions
+    # 'head', 'upperbody', 'arms', 'legs', 'feet'
+    # Direction Calculation for Arms
+    # if (x1 < x2 and y1 < y2) or (x1 > x2, y1 > y2):
+    #     if deltax < deltay: print("Moveup")
+    #     else: print("Movedown")
+    # else:
+    #     if deltax < deltay: print("Movedown")
+    #     else: print("Moveup")
+
     message = f"Your worst angle is {worst_angle} degrees at {name_list[max_i]}"
+    # TODO: Idea: Feet->Leg/Thigh->Upper Body(Torso)->Arms, Instructions should be issued from this sequence
+    # TODO: Leg Instructions need to be compared to the an axis line representing center of body (Joint angle + Ref Angle)
     out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
     # text_to_speech(message, out_path)
     # play_wav_file(out_path)
@@ -336,12 +359,7 @@ def backend_process ():
 # TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
 # Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.
 
-
 # TODO: Feedbacks of posture analysis, limb specific instructions.
 # Raise/Lower {Left/Right} {limb name}, by {x} degrees. I have all limbs labelled so should be fine.
-# How do I derive from the consine similarity to actual angles? Should be a correlation I could follow.
-# Invoke TTS engine to produce .wav file in designated folder,
-# Then use the script to play the generated instruction.
-# Storage? Do I wipe all the saved .wav files after the session? After each posture (in my mind)?
 # TODO: Priortize lower body part, assigning weight for different body parts
 # TODO: Should be a tolerance threshold for angle? How much should it be?
