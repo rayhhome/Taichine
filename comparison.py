@@ -45,9 +45,9 @@ def text_to_speech(text, out_path):
 # Expect to receive a tolerance level from front end
 def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
-    name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
-               "Left_Lowerarm", "Upper_Body", "Right_Waist", "Right_Thigh", "Right_Calf", 
-               "Left_Waist", "Left_Thigh", "Left_Calf", "Left_Feet", "Right_Feet"]
+    name_list=["Head", "Upper_Body", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
+               "Left_Lowerarm", "Mid_Waist", "Right_Waist", "Right_Thigh", "Right_Calf", 
+               "Left_Waist", "Left_Thigh", "Left_Calf", "Left_Feet", "Right_Feet"] # ???
 
     body_parts = {
         'head': ['Head'],
@@ -96,15 +96,15 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         # Extract the keypoints from the JSON data
         input_keypoints = input_data["people"][i]["pose_keypoints_2d"]
 
-        local_keypoints = local_data["people"][i]["pose_keypoints_2d"]
+        local_keypoints = local_data["people"][0]["pose_keypoints_2d"]
 
         lhand_keypoints = input_data["people"][i]["hand_left_keypoints_2d"]
 
         rhand_keypoints = input_data["people"][i]["hand_right_keypoints_2d"]
 
-        local_lhand_keypoints = local_data["people"][i]["hand_left_keypoints_2d"]
+        local_lhand_keypoints = local_data["people"][0]["hand_left_keypoints_2d"]
 
-        local_rhand_keypoints = local_data["people"][i]["hand_right_keypoints_2d"]
+        local_rhand_keypoints = local_data["people"][0]["hand_right_keypoints_2d"]
 
         # Ensure the two lists have the same length
         # if len(input_keypoints) != len(local_keypoints):
@@ -118,15 +118,22 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
         # Reshape the arrays to have shape (n, 3)
         input_keypoints = np.array(input_keypoints).reshape(-1, 3)
+        input_keypoints = input_keypoints[:, :2]
+
 
         # List Missing joints and match missing points with names
         missing_jointname = [] # This could be returned to frontend
-        missing_joints = [j for j, sublist in enumerate(input_keypoints) if np.array_equal(sublist, np.array([0, 0, 0]))]
+        missing_joints = [j for j, sublist in enumerate(input_keypoints) if np.array_equal(sublist, np.array([0, 0]))]
         for joint in missing_joints:
-            if joint in name_list: # It could be possible that face values are not recognized, in this case, ignore
+            if joint in range(len(name_list)):
+                # Probably do a dict
                 missing_jointname.append(name_list[joint])
-        if missing_jointname != []:
-            print(missing_jointname) # DEBUG
+            elif joint == 19:
+                missing_jointname.append(name_list[15])
+            elif joint == 22:
+                missing_jointname.append(name_list[16])
+        # if missing_jointname != []:
+        print(missing_jointname) # DEBUG
         cur_person.append(missing_jointname)
             # Integration TODO: return the list if non-empty? TBD
 
@@ -137,7 +144,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         local_rhand_keypoints = np.array(local_rhand_keypoints).reshape(-1, 3)
 
         # Remove confidence intervals prior to comparison
-        input_keypoints = input_keypoints[:, :2]
+        # input_keypoints = input_keypoints[:, :2]
         local_keypoints = local_keypoints[:, :2]
         lhand_keypoints = lhand_keypoints[:, :2]
         rhand_keypoints = rhand_keypoints[:, :2]
@@ -408,7 +415,7 @@ def backend_process (mode, pose_name, image_name):
 
 # TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
 # Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.
-
+# TODO: Just draw a vertical reference line for comparing leg angles.
 
 # TODO: Feedbacks of posture analysis, limb specific instructions.
 # Raise/Lower {Left/Right} {limb name}, by {x} degrees. I have all limbs labelled so should be fine.
