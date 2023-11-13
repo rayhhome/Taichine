@@ -142,7 +142,7 @@ class TrainingScreen(Screen):
 
   def move_on(self):
     print("move_on() called")
-    backend_process()
+    backend_process(self.mode, self.current_seq, self.current_pose)
     # Ray (Thoughts on the flow): 
     # Check back_process return
     # If some body part outside of frame:
