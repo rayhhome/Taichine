@@ -4,15 +4,17 @@ import kivy
 kivy.require('2.2.1')
 
 from kivy.app import App
-from kivy.properties import StringProperty, NumericProperty, ObjectProperty
+from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.animation import Animation
 from kivy.uix.screenmanager import Screen
+from kivy.uix.widget import Widget
 from kivy.core.window import Window
 
 from time import strftime
@@ -25,7 +27,7 @@ from os.path import join, isfile, split
 Window.minimum_width = 800
 Window.minimum_height = 600
 
-confirm_selection = None
+path_selected = None
 # pose item
 class PoseItem(ButtonBehavior, BoxLayout):
   id = StringProperty('')
@@ -121,7 +123,7 @@ class TrainingScreen(Screen):
       # backend_process()
       self.move_on()
 
-    self.start_countdown(finish_callback);
+    self.start_countdown(finish_callback)
 
     # Start backend processing
     # TODO @ Ray: Need a parameter to know:
@@ -185,55 +187,22 @@ class CustomScreen(Screen):
     self.curr_dir = curr_dir = getcwd()
     self.poses_folder = join(curr_dir, "user_poses")
     print("self.curr_dir: ", self.curr_dir)
+    self.cancel = BooleanProperty(False)
     super().__init__(**kwargs)
 
   def select_file(self):
     system(f"mkdir -p {self.poses_folder}")
     filechooser.open_file(on_selection = self.selected)
     
-    # path = filechooser.open_file(title="Choose an Image to Upload!", 
-    #                      filters=[("PNG Files", "*.png")])
-    
   def selected(self, selection):
-    src = selection
-    globals()['confirm_selection'] = src
-    print("globals()['confirm_selection']: ", globals()["confirm_selection"])
-    # dest = []
-    # print("self.curr_dir: ", self.curr_dir)
+    if(len(selection) == 0):
+      self.cancel = True 
+      return
+    globals()['path_selected'] = selection[0]
+    print("globals()['path_selected']: ", globals()["path_selected"])
     
-    # for i in range(len(selection)):
-    #     src_split_list = src[i].split('\\')
-    #     filename = src_split_list[-1] 
-    #     dest.append(f"{self.curr_dir}\\user_poses\\{filename}")
-    
-    # print("src: ", src)
-    # for j in range(len(dest)):
-    #   if os.name == 'nt':  # Windows
-    #     cmd = f'copy "{src[j]}" "{dest[j]}"'
-    #   else:  # Unix/Linux
-    #     cmd.replace("\\", "/")
-    #     cmd = f'cp "{src}" "{dst}"'
-        
-    #   print("src: ", src[j])
-    #   print("dest: ", dest[j])
-    #   system(cmd)
-    # # print(selection[0])
-  
-    # print("done")
-
-    # chdir(self.curr_dir)
-
-def getFileTypeAndName(fileSrc):
-  print("fileSrc", fileSrc)
-  src_split_list = fileSrc.split('\\')
-  print("src_split_list", src_split_list)
-  filenameAndType = src_split_list[-1]
-  filename_list = filenameAndType.split('.')
-  print(filename_list)
-  filetype = filename_list[-1]
-  filename = filename_list[0]
-
-  return filename, filetype
+class PoseSequenceItem(Widget):
+  pass
 
 class ConfirmScreen(Screen):
 
@@ -244,23 +213,44 @@ class ConfirmScreen(Screen):
     self.curr_dir = curr_dir = getcwd()
     self.new_filename=""
     self.display_label=None
+    self.posesList = []
     # self.textbox = None
 
   def on_pre_enter(self, *largs):
     print("self.curr_dir: ", self.curr_dir)
-    # print("new screen globals()['confirm_selection']: ", globals()['confirm_selection'])
+    # print("new screen globals()['path_selected']: ", globals()['path_selected'])
     #  height=30,
 
-    confirm_selection = globals()['confirm_selection'][0]
-    src_split_list = confirm_selection.split('\\')
+    path_selected = globals()['path_selected']
+    pathIsFolder = os.path.isdir(path_selected)
+    
+    if(pathIsFolder):
+      
+      # code from https://www.geeksforgeeks.org/how-to-iterate-over-files-in-directory-using-python/ 
+
+      for file in os.listdir(path_selected):
+        file_path = os.path.join(path_selected, file)
+        if(os.path.isfile(file_path)):
+          self.posesList.append(file_path)
+    else:
+      self.posesList.append(path_selected)
+
+    num_poses = len(self.posesList)
+    src_split_list = path_selected.split('\\')
     self.file_label = src_split_list[-1]
 
     def on_enter(instance): #, value
       # print("value: ", instance.text)
       self.new_filename = instance.text
       filename, file_type = getFileTypeAndName(self.file_label)
-      self.display_label.text = f'[color=121212]{self.new_filename}.{file_type}'
+      # self.display_label.text = f'[color=121212]{self.new_filename}.{file_type}'
 
+    grid_layout = GridLayout(rows=1, cols=num_poses, orientation='lr-tb', padding=5)
+    
+    for i in range(num_poses):
+      pose_item = PoseSequenceItem()
+      grid_layout.add_widget(pose_item)
+    
     textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.7}, cursor_blink=True, multiline=False)
     textbox.bind(on_text_validate=on_enter)
     self.add_widget(textbox)
@@ -268,18 +258,29 @@ class ConfirmScreen(Screen):
     
     # print("filename: ", filename)
 
-    print("file_label: ", self.file_label)
-    print("confirm_selection: ", confirm_selection)
-    self.display_label = Label(text=f'[color=121212]{self.file_label}', markup=True, size_hint=(0.2, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.6}, background_color=(0,0,1,1))
-    # self.display_label.bind(text=on_enter)
+    # print("file_label: ", self.file_label)
+    # print("path_selected: ", path_selected)
+    # self.display_label = Label(text=f'[color=121212]{self.file_label}', markup=True, size_hint=(0.2, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.6}, background_color=(0,0,1,1))
+    # # self.display_label.bind(text=on_enter)
   
-    self.display_image = Image(source=confirm_selection, size_hint=(0.3, 0.3), pos_hint={'center_x': 0.5, 'center_y': 0.4})
+    # self.display_image = Image(source=path_selected, size_hint=(0.3, 0.3), pos_hint={'center_x': 0.5, 'center_y': 0.4})
     
-    self.add_widget(self.display_image)
-    self.add_widget(self.display_label)
+    # self.add_widget(self.display_image)
+    # self.add_widget(self.display_label)
 
+  def exit_button(self):
+    print("\n\nEXIT button pressed!\n\n")
+
+  def left_button(self):
+    print("\n\nLEFT button pressed!\n\n")
+
+  def right_button(self):
+    print("\n\nRIGHT button pressed!\n\n")
+    # for children in self.children:
+    #     print(children)
+  
   def confirmed(self):
-    src = globals()['confirm_selection']
+    src = globals()['path_selected']
     # print("src: ", src)
     dest = []
     # print("self.curr_dir: ", self.curr_dir)
@@ -315,6 +316,17 @@ class ConfirmScreen(Screen):
 
     # self.on_enter = on_enter()
 
+def getFileTypeAndName(fileSrc):
+  print("fileSrc", fileSrc)
+  src_split_list = fileSrc.split('\\')
+  print("src_split_list", src_split_list)
+  filenameAndType = src_split_list[-1]
+  filename_list = filenameAndType.split('.')
+  print(filename_list)
+  filetype = filename_list[-1]
+  filename = filename_list[0]
+
+  return filename, filetype
 
 class TaichineApp(App):
   pass 

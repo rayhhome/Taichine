@@ -431,8 +431,8 @@ ScreenManager:
           on_press: 
             # root.manager.current = "selection_screen"
             root.select_file()
+            root.manager.current = 'confirm' if root.cancel == False else 'custom'
             root.manager.transition.direction = 'right'
-            root.manager.current = 'confirm'
             
               
         Image:
@@ -475,6 +475,7 @@ ScreenManager:
         on_press: 
           root.manager.transition.direction = 'right'
           root.manager.current = 'custom'
+          
 
     FloatLayout:
       canvas:
@@ -510,6 +511,67 @@ ScreenManager:
           root.confirmed()
           root.manager.transition.direction = 'left'
           root.manager.current = 'custom'
+
+<PoseSequenceItem>:
+  canvas:
+    Rectangle: 
+      size: self.size
+
+  Image:
+    id: pose_image
+    source: 'icons/no_image_96.png'
+
+  RelativeLayout:
+        
+    Button:
+        # id: exit_button
+        # size_hint: self.parent.width / 4, self.parent.height / 4
+        # pos_hint: {'center_x': 1, 'center_y': 1}
+        # pos_hint: {'x': 5, 'y': 5}
+        # size_hint: 0.1, 0.1
+        # background_color: 255,255,255,1
+    
+        # on_press: root.exit_button()
+
+        # Image:
+        #     id:exit_button_image
+        #     source: 'icons/exit-icon.png'
+        #     center_x: self.parent.center_x
+        #     center_y: self.parent.center_y
+
+    
+  #   Button:
+  #       id: left_button
+  #       # size_hint: self.parent.width / 4, self.parent.height / 4
+        
+  #       background_color: 255,255,255,1
+  #       pos_hint: {'center_x': 0, 'center_y': 0}
+  #       # pos_hint: {'x': 10, 'y': 10}
+  #       size_hint: 0.1, 0.1
+  #       on_press: root.left_button()
+
+  #       Image:
+  #           id:left_button_image
+  #           source: 'icons/button-left.png'
+  #           center_x: self.parent.center_x
+  #           center_y: self.parent.center_y
+    
+  #   Button:
+  #       id: right_button
+  #       # size_hint: self.parent.width / 4, self.parent.height / 4
+        
+  #       background_color: 255,255,255,1
+  #       pos_hint: {'center_x': 1, 'center_y': 0}
+  #       # pos_hint: {'x': 3, 'y': 3}
+  #       size_hint: 0.1, 0.1
+  #       on_press: root.right_button()
+
+  #       Image:
+  #           id:right_button_image
+  #           source: 'icons/button-right.png'
+  #           center_x: self.parent.center_x
+  #           center_y: self.parent.center_y
+
 
 <PoseItem>:
   canvas:

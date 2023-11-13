@@ -26,16 +26,7 @@ Builder.load_file("upload_button.kv")
 
 class upload_image_widget(Screen):
     
-    def exit_button(self):
-        print("\n\nEXIT button pressed!\n\n")
-
-    def left_button(self):
-        print("\n\nLEFT button pressed!\n\n")
-
-    def right_button(self):
-        print("\n\nRIGHT button pressed!\n\n")
-        for children in self.children:
-            print(children)
+    
         # print(self.parent)
     pass
 
