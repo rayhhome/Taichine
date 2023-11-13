@@ -74,6 +74,7 @@ class SettingScreen(Screen):
 class TrainingScreen(Screen):
   countdown = NumericProperty(10)
   mode = StringProperty('')
+  current_seq  = StringProperty('')
   current_pose = StringProperty('')
 
   def set_reference_image(self, mode, seq_id, pos_id):
@@ -94,6 +95,7 @@ class TrainingScreen(Screen):
     elif mode == 'custom':
       self.ids['reference_image'].source = join('.', 'user_poses', seq_id, pos_id+'.png')
     self.ids['reference_image'].reload()
+    self.current_seq  = seq_id
     self.current_pose = pos_id
 
   def start_training(self):
@@ -122,7 +124,9 @@ class TrainingScreen(Screen):
     # 1. Whether it is user pose or default pose
     #   Ray: to access the pose mode, use self.mode, which can be either "integrated" or "custom"
     # 2. The pose name to find the coordinates
-    #   Ray: to access the pose name, use self.current_pose, which can be "1.png", "2.png", "3.png"...
+    #   Ray: to access the pose name, use:
+    #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
+    #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
   def set_countdown(self, seconds):
     # Ray: set the value for the countdown timer
