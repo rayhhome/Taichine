@@ -250,43 +250,29 @@ ScreenManager:
         pos_hint: {'center_y': 0.5, 'center_x': 0.9}
         on_press: root.start_training()
 
-    BoxLayout:
-      canvas:
-        Color:
-          rgb: 0.4, 0.4, 0.4
-        Rectangle:
-          size: self.size        
-      orientation: 'vertical'
+    GridLayout:      
+      cols: 3
       size_hint: 1, 0.8
       pos_hint: {'y': 0}
+      padding: 10
+      spacing: 10
 
-      BoxLayout:      
-        size_hint: 1, 0.5
-        pos_hint: {'top': 1}
-        orientation: 'horizontal'
-        padding: 10
-        spacing: 30
+      TrimmedCamera:
+        id: camera
+        resolution: (640, 480)
+        play: True
 
-        Camera:
-          id: camera
-          size_hint: 0.45, 1
-          resolution: (640, 480)
-          play: True
+      FloatLayout:
+        canvas:
+          Color:
+            rgb: 1.0, 0.0, 0.0
+          Rectangle:
+            size: self.size
+            pos: self.pos
+
+      Image:
+        id: reference_image
         
-        Image:
-          id: reference_image
-          size_hint: 0.45, 1
-
-      BoxLayout: 
-        size_hint: 1, 0.5
-        pos_hint: {'y': 0}
-        orientation: 'horizontal'
-        padding: 10
-        spacing: 10
-
-        Image:
-          source: 'image0.png'
-
 <SettingScreen>:
   name: 'setting'
   FloatLayout:
@@ -333,30 +319,32 @@ ScreenManager:
       padding: 50
 
       Label:
-        text: 'Volume'
+        text: 'Tolerance'
         color: 0, 0, 0, 1
         size_hint: 0.8, 0.2
         font_size: self.width * 0.1
         width: 80
 
       Slider:
-        id: volume_slider
-        min: 0
-        max: 10
+        id: tolerance_slider
+        min: 5
+        max: 15
+        value: 5
         step: 1
         orientation: 'horizontal'
 
       Label:
-        text: 'Sensitivity'
+        text: 'Preparation Time'
         color: 0, 0, 0, 1
         size_hint: 0.8, 0.2
         font_size: self.width * 0.1
         width: 80
 
       Slider:
-        id: sensitivity_slider
-        min: 0
+        id: preparation_slider
+        min: 1
         max: 10
+        value: 5
         step: 1
         orientation: 'horizontal'
 
@@ -419,22 +407,26 @@ ScreenManager:
         color: 0, 0, 0, 1
       
       FloatLayout:
+        canvas:
+          Color:
+            rgb: 1, 1, 1
+          Rectangle:
+            size: self.size
+            pos : self.pos
         size_hint: 0.5, 0.5
-        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        pos_hint: {'center_x': 0.5, 'y': 0}
 
         Button:
           id: upload_button
           size_hint: 1, 1
           pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-          background_color: 255,255,255,1
           # background_normal: 'icons/file-upload_white.png'
           on_press: 
             # root.manager.current = "selection_screen"
             root.select_file()
             root.manager.current = 'confirm' if root.cancel == False else 'custom'
             root.manager.transition.direction = 'right'
-            
-              
+                  
         Image:
           id: button_image
           size_hint: 1, 1

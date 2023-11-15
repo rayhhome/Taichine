@@ -15,17 +15,17 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.animation import Animation
 from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
+from kivy.uix.camera import Camera
 from kivy.core.window import Window
-
-from time import strftime
 
 from plyer import filechooser
 import os
-from os import system, getcwd, listdir, chdir
+from os import system, getcwd, listdir, makedirs
 from os.path import join, isfile, split
 
 Window.minimum_width = 800
 Window.minimum_height = 600
+# Window.fullscreen = 'auto'
 
 path_selected = None
 # pose item
@@ -95,11 +95,10 @@ class TrainingScreen(Screen):
     #        this means if we want to allow for custom pose sequenes,
     #        we need rename the images in the folder to these numbers
     #        according to their order      
-
     if mode == 'integrated':
-      self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id+'.png')
+      self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id + '.png')
     elif mode == 'custom':
-      self.ids['reference_image'].source = join('.', 'user_poses', seq_id, pos_id+'.png')
+      self.ids['reference_image'].source = join('.', 'user_poses', seq_id, pos_id + '.png')
     self.ids['reference_image'].reload()
     self.current_seq  = seq_id
     self.current_pose = pos_id
@@ -116,8 +115,9 @@ class TrainingScreen(Screen):
       start_button = self.ids['start_button']
       start_button.text = "Start"
       camera = self.ids['camera']
-      camera.export_to_png("user.png")
-      camera.export_to_png(".\\user_input\\user.png")
+      if (not os.path.exists(join('.', 'user_input'))):
+        os.makedirs(join('.', 'user_input'))
+      camera.export_to_png(join('.', 'user_input', 'user.png'))
 
       # Ray: backend processing moved to move_on() 
       # backend_process()
@@ -126,7 +126,7 @@ class TrainingScreen(Screen):
     self.start_countdown(finish_callback)
 
     # Start backend processing
-    # TODO @ Ray: Need a parameter to know:
+    # DONE @ Ray: Need a parameter to know:
     # 1. Whether it is user pose or default pose
     #   Ray: to access the pose mode, use self.mode, which can be either "integrated" or "custom"
     # 2. The pose name to find the coordinates
@@ -180,6 +180,19 @@ class TrainingScreen(Screen):
     start_button = self.ids['start_button']
     start_button.text = str(round(value, 1))
 
+class TrimmedCamera(Camera):
+  # https://stackoverflow.com/questions/67967041/how-can-i-use-kivy-to-zoom-in-or-zoom-out-live-camera
+  region_x = NumericProperty(200)
+  region_y = NumericProperty(0)
+  region_w = NumericProperty(240)
+  region_h = NumericProperty(480)
+  
+  def on_tex(self, camera):
+    self.texture = texture = camera.texture
+    # get some region
+    self.texture = self.texture.get_region(self.region_x, self.region_y, self.region_w, self.region_h)
+    self.texture_size = list(texture.size)
+    self.canvas.ask_update()
 
 class CustomScreen(Screen):
 
