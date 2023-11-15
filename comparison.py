@@ -48,8 +48,8 @@ def text_to_speech(text, out_path):
 # Return formatting:
 # {
 #   Bool PosePoss
-#   List ReferenceCoordinates
-#   List UserCoordinates
+#   ndarray ReferenceCoordinates
+#   ndarray UserCoordinates
 #   List LimbCorrect
 #   List UserAngles
 #   List ReferenceAngles
@@ -393,50 +393,50 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     passed_angle = [] 
 
     # Comment out the following to check outputs without full body in frame
-    if len(person_list[best_person][1]) != 0:
-        best_angles = []
-    else:
-        best_angles = person_list[best_person][-1] # Return this angle list to front end for skeleton drawing
-    if len(best_angles) == 0:
-        out_path = "D:/Workspace/Taichine/Voice/Bad.wav" # TODO: Designated Folder/Flash Storage
-        message = "Adjust your posture to include full body in frame"
-        print(message)
+    # if len(person_list[best_person][1]) != 0:
+    #     best_angles = []
+    # else:
+    best_angles = person_list[best_person][-1] # Return this angle list to front end for skeleton drawing
+    # if len(best_angles) == 0:
+    #     out_path = "D:/Workspace/Taichine/Voice/Bad.wav" # TODO: Designated Folder/Flash Storage
+    #     message = "Adjust your posture to include full body in frame"
+    #     print(message)
+    #     text_to_speech(message, out_path)
+    #     play_wav_file(out_path)
+    # Comment out this branch above to test without full body images
+    # else:
+    for ele in best_angles:
+        passed_angle.append(ele * 180 / math.pi)
+    for k, (similarity, angle_degrees) in enumerate(zip(similarities, passed_angle)):
+        if (angle_degrees) < tolerance:
+            limb_checklist.append(True)
+            continue
+        else:
+            if math.isnan(angle_degrees):
+                print(f"Angle (in degrees) between {name_list[k]} and reference pose: 0.0000")
+            else:
+                print(f"Angle (in degrees) between {name_list[k]} and reference pose: {(angle_degrees):.4f}")
+                limb_checklist.append(False)
+                error_list.append(name_list[k])
+        if angle_degrees > max_degrees:
+            max_degrees = angle_degrees
+            max_k = k
+
+    if not error_list: # All poses pass == Error list empty
+        message = "Great, you made it!"
+        out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Designated Folder/Flash Storage
+        print("Great, you made it! You mastered the pose.")
         text_to_speech(message, out_path)
         play_wav_file(out_path)
-    # Comment out this branch above to test without full body images
+        pose_pass = True
     else:
-        for ele in best_angles:
-            passed_angle.append(ele * 180 / math.pi)
-        for k, (similarity, angle_degrees) in enumerate(zip(similarities, passed_angle)):
-            if (angle_degrees) < tolerance:
-                limb_checklist.append(True)
-                continue
-            else:
-                if math.isnan(angle_degrees):
-                    print(f"Angle (in degrees) between {name_list[k]} and reference pose: 0.0000")
-                else:
-                    print(f"Angle (in degrees) between {name_list[k]} and reference pose: {(angle_degrees):.4f}")
-                    limb_checklist.append(False)
-                    error_list.append(name_list[k])
-            if angle_degrees > max_degrees:
-                max_degrees = angle_degrees
-                max_k = k
-        
-        if not error_list: # All poses pass == Error list empty
-            message = "Great, you made it!"
-            out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Designated Folder/Flash Storage
-            print("Great, you made it! You mastered the pose.")
-            text_to_speech(message, out_path)
-            play_wav_file(out_path)
-            pose_pass = True
-        else:
-            worst_angle = round(max(passed_angle))
-            message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
-            # TODO: Leg Instructions need to be compared to the an axis line representing center of body (Joint angle + Ref Angle)
-            # (0, 8) 
-            out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
-            text_to_speech(message, out_path)
-            play_wav_file(out_path) # Comment out for testing without TTS
+        worst_angle = round(max(passed_angle))
+        message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
+        # TODO: Leg Instructions need to be compared to the an axis line representing center of body (Joint angle + Ref Angle)
+        # (0, 8) 
+        out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
+        text_to_speech(message, out_path)
+        play_wav_file(out_path) # Comment out for testing without TTS
 
     output_list.append(pose_pass)
     output_list.append(local_keypoints)
@@ -444,6 +444,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list.append(limb_checklist)
     output_list.append(input_quads2)
     output_list.append(local_quads2)
+    print(output_list)
     return output_list
 
 
