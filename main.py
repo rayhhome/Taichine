@@ -187,21 +187,33 @@ class CustomScreen(Screen):
     self.curr_dir = curr_dir = getcwd()
     self.poses_folder = join(curr_dir, "user_poses")
     print("self.curr_dir: ", self.curr_dir)
-    self.cancel = BooleanProperty(False)
+    self.cancel = False
     super().__init__(**kwargs)
 
   def select_file(self):
-    system(f"mkdir -p {self.poses_folder}")
+    system(f"mkdir {self.poses_folder}")
     filechooser.open_file(on_selection = self.selected)
     
   def selected(self, selection):
+    # print("len(selection) = ", len(selection))
     if(len(selection) == 0):
       self.cancel = True 
       return
+    print("self.cancel", self.cancel)
     globals()['path_selected'] = selection[0]
     print("globals()['path_selected']: ", globals()["path_selected"])
     
 class PoseSequenceItem(Widget):
+  def exit_button(self):
+    print("\n\nEXIT button pressed!\n\n")
+
+  def left_button(self):
+    print("\n\nLEFT button pressed!\n\n")
+
+  def right_button(self):
+    print("\n\nRIGHT button pressed!\n\n")
+    # for children in self.children:
+    #     print(children)
   pass
 
 class ConfirmScreen(Screen):
@@ -210,7 +222,7 @@ class ConfirmScreen(Screen):
 
     super(ConfirmScreen, self).__init__(**kwargs)
     self.filename=""
-    self.curr_dir = curr_dir = getcwd()
+    self.curr_dir = getcwd()
     self.new_filename=""
     self.display_label=None
     self.posesList = []
@@ -222,6 +234,7 @@ class ConfirmScreen(Screen):
     #  height=30,
 
     path_selected = globals()['path_selected']
+    print("path_selected: ", path_selected)
     pathIsFolder = os.path.isdir(path_selected)
     
     if(pathIsFolder):
@@ -245,12 +258,14 @@ class ConfirmScreen(Screen):
       filename, file_type = getFileTypeAndName(self.file_label)
       # self.display_label.text = f'[color=121212]{self.new_filename}.{file_type}'
 
-    grid_layout = GridLayout(rows=1, cols=num_poses, orientation='lr-tb', padding=5)
-    
+    # grid_layout = GridLayout(rows=1, orientation='lr-tb', padding=5, size_hint=(1,0.7), pos_hint={'center_x': 0.5,'center_y': 0.5})
+    # self.add_widget(grid_layout)
+
     for i in range(num_poses):
       pose_item = PoseSequenceItem()
-      grid_layout.add_widget(pose_item)
-    
+      pose_item.ids.pose_image.source = self.posesList[i]
+      self.ids.grid_layout.add_widget(pose_item)
+
     textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.7}, cursor_blink=True, multiline=False)
     textbox.bind(on_text_validate=on_enter)
     self.add_widget(textbox)
@@ -268,16 +283,7 @@ class ConfirmScreen(Screen):
     # self.add_widget(self.display_image)
     # self.add_widget(self.display_label)
 
-  def exit_button(self):
-    print("\n\nEXIT button pressed!\n\n")
-
-  def left_button(self):
-    print("\n\nLEFT button pressed!\n\n")
-
-  def right_button(self):
-    print("\n\nRIGHT button pressed!\n\n")
-    # for children in self.children:
-    #     print(children)
+  
   
   def confirmed(self):
     src = globals()['path_selected']
@@ -289,6 +295,7 @@ class ConfirmScreen(Screen):
       
     # removing old filename from path
     filename, filetype = getFileTypeAndName(src[0]) # = src_split_list.pop(-1)
+    pose_seq_dir = filename
     # join_char = "\\"
     # src_path = join_char.join(src_split_list)
     
@@ -297,7 +304,10 @@ class ConfirmScreen(Screen):
 
     # print("   src_path  : ", src_path)
     system(f"mkdir {self.curr_dir}\\user_poses\\{filename}")
-    dest.append(f"{self.curr_dir}\\user_poses\\{filename}\\{filename}.{filetype}")
+    if(len(self.posesList) == 1):
+      dest.append(f"{self.curr_dir}\\user_poses\\{filename}\\{filename}.{filetype}")
+    else:
+      dest.append(f"{self.curr_dir}\\user_poses\\{pose_seq_dir}")
       
     # print("src: ", src)
     for j in range(len(dest)):
@@ -322,6 +332,7 @@ def getFileTypeAndName(fileSrc):
   print("src_split_list", src_split_list)
   filenameAndType = src_split_list[-1]
   filename_list = filenameAndType.split('.')
+  print("filename_list", filename_list)
   print(filename_list)
   filetype = filename_list[-1]
   filename = filename_list[0]

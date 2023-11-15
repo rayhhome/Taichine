@@ -482,25 +482,38 @@ ScreenManager:
         Color:
           rgb: 0.8, 0.8, 0.8
         Rectangle:
-          size: self.size      
+          size: self.size  
       orientation: "vertical"
       size_hint: 1, 0.8
       pos_hint: {'y': 0, 'center_x': 0.5}
       
       canvas.before:
+        Color:
+          rgba: 1, 1, 1, 1
         Rectangle:
           pos: self.pos
           size: self.size
-          Color:
-            rgba: 1, 1, 1, 1
-      
-      padding: 50
-      spacing: 20
+
 
       # Image:
       #   source: confirm_selection
       #   size_hint: 0.3, 0.3
       #   pos_hint: {'center_x': 0.5, 'center_y': 0.2}
+      GridLayout:
+
+        id: grid_layout
+        rows: 1
+        orientation: 'lr-tb'
+        pos_hint: {'center_x': 0.50,'center_y': 0.55}
+        size_hint: 1.0, 0.7
+        canvas:
+          Color:
+            rgb: 0.0, 0.0, 1.0
+          Rectangle:
+            size: self.size
+            pos: self.pos
+          
+
       Button:
         id: confirm_button
         text: "Confirm"
@@ -512,65 +525,78 @@ ScreenManager:
           root.manager.transition.direction = 'left'
           root.manager.current = 'custom'
 
-<PoseSequenceItem>:
-  canvas:
-    Rectangle: 
-      size: self.size
-
+<PoseSequenceItem@RelativeLayout>:
+    
   Image:
     id: pose_image
     source: 'icons/no_image_96.png'
+    # size_hint: 1.0, 1.0
+    width: self.parent.width
+    height: self.parent.height
+    # pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+    pos: self.parent.pos
 
   RelativeLayout:
-        
     Button:
-        # id: exit_button
-        # size_hint: self.parent.width / 4, self.parent.height / 4
-        # pos_hint: {'center_x': 1, 'center_y': 1}
-        # pos_hint: {'x': 5, 'y': 5}
-        # size_hint: 0.1, 0.1
-        # background_color: 255,255,255,1
-    
-        # on_press: root.exit_button()
+      id: exit_button
+      # right: root.right
+      # size_hint: 0.075, 0.075
+      # 10000 - 100000
+      size_hint: self.parent.width / 1000, self.parent.height / 25000
+      
+      # width: 1
+      # height: 1
+      
+      pos_hint: {'right': 1, 'top': 0.7}
+      background_color: 1,1,1,1
+  
+      on_press: root.exit_button()
+      # RelativeLayout:
+      Image:
+        id:exit_button_image
+        source: 'icons/exit-icon.png'
+        width: self.parent.width
+        height: self.parent.height
+        center_x: self.parent.center_x
+        center_y: self.parent.center_y
+          
+# RelativeLayout:    
+    Button:
+      id: left_button
+      pos_hint: {'right': 0.5, 'top': 0.2}
 
-        # Image:
-        #     id:exit_button_image
-        #     source: 'icons/exit-icon.png'
-        #     center_x: self.parent.center_x
-        #     center_y: self.parent.center_y
+      size_hint: self.parent.width / 1000, self.parent.height / 25000
+      # size_hint: self.parent.width / 2048, self.parent.height / 2048
+      background_color: 255,255,255,1
+      on_press: root.left_button()
 
-    
-  #   Button:
-  #       id: left_button
-  #       # size_hint: self.parent.width / 4, self.parent.height / 4
-        
-  #       background_color: 255,255,255,1
-  #       pos_hint: {'center_x': 0, 'center_y': 0}
-  #       # pos_hint: {'x': 10, 'y': 10}
-  #       size_hint: 0.1, 0.1
-  #       on_press: root.left_button()
+      Image:
+        id:left_button_image
+        source: 'icons/button-left.png'
+        width: self.parent.width
+        height: self.parent.height
+        center_x: self.parent.center_x
+        center_y: self.parent.center_y
 
-  #       Image:
-  #           id:left_button_image
-  #           source: 'icons/button-left.png'
-  #           center_x: self.parent.center_x
-  #           center_y: self.parent.center_y
-    
-  #   Button:
-  #       id: right_button
-  #       # size_hint: self.parent.width / 4, self.parent.height / 4
-        
-  #       background_color: 255,255,255,1
-  #       pos_hint: {'center_x': 1, 'center_y': 0}
-  #       # pos_hint: {'x': 3, 'y': 3}
-  #       size_hint: 0.1, 0.1
-  #       on_press: root.right_button()
+# RelativeLayout:   
+    Button:
+      id: right_button
+      # size_hint: self.parent.width / 4, self.parent.height / 4
+      pos_hint: {'right': 0.8, 'top': 0.2}
 
-  #       Image:
-  #           id:right_button_image
-  #           source: 'icons/button-right.png'
-  #           center_x: self.parent.center_x
-  #           center_y: self.parent.center_y
+      # pos_hint: {'x': 3, 'y': 3}
+      size_hint: self.parent.width / 1000, self.parent.height / 25000
+      # size_hint: self.parent.width / 2048, self.parent.height / 2048
+      background_color: 255,255,255,1
+      on_press: root.right_button()
+
+      Image:
+        id:right_button_image
+        source: 'icons/button-right.png'
+        width: self.parent.width
+        height: self.parent.height
+        center_x: self.parent.center_x
+        center_y: self.parent.center_y
 
 
 <PoseItem>:
