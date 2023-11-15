@@ -146,9 +146,13 @@ class TrainingScreen(Screen):
     self.anim.bind(on_complete=callback_func)
     self.anim.start(self)
 
+  def draw_skeleton(self, joint_data):
+    pass
+
   def move_on(self):
     print("move_on() called")
-    backend_process(self.mode, self.current_seq, self.current_pose)
+    joint_data = backend_process(self.mode, self.current_seq, self.current_pose)
+    self.draw_skeleton(joint_data)
     # Ray (Thoughts on the flow): 
     # Check back_process return
     # If some body part outside of frame:
@@ -170,6 +174,7 @@ class TrainingScreen(Screen):
     # Set up countdown timer here, probably shorter than 10 seconds 
     #   (5 seconds? Use set_countdown() to set the time)
     # Start countdown and set call_back to move_on() again
+
 
   def on_countdown(self, instance, value):
     # Ray: this is for animation of the start button text
