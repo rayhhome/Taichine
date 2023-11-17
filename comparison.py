@@ -101,7 +101,8 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     best_person = 0
     # Person list will be consist of cur_person in the loop below
     # cur_person is a list formatted as following:
-    # [i, [missing_jointname], ["right" , "left"], average_similarity, [angles_in_degrees]]
+    # [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
+    # average_similarity, [angles_in_rads]]
     person_list = []
     for i in range(len(input_data["people"])):
         cur_person = []
@@ -132,6 +133,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         # Reshape the arrays to have shape (n, 3)
         input_keypoints = np.array(input_keypoints).reshape(-1, 3)
         input_keypoints = input_keypoints[:, :2]
+        cur_person.append(input_keypoints)  
 
 
         # List Missing joints and match missing points with names
@@ -146,7 +148,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             elif joint == 22:
                 missing_jointname.append(name_list[15])
         # if missing_jointname != []:
-        print(missing_jointname) # DEBUG
+        # print(missing_jointname) # DEBUG
         cur_person.append(missing_jointname)
         # TODO: Say something about missing bodypart: Include your body in frame
             # Integration TODO: return the list if non-empty? TBD
@@ -158,7 +160,6 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         local_rhand_keypoints = np.array(local_rhand_keypoints).reshape(-1, 3)
 
         # Remove confidence intervals prior to comparison
-        # input_keypoints = input_keypoints[:, :2]
         local_keypoints = local_keypoints[:, :2]
         lhand_keypoints = lhand_keypoints[:, :2]
         rhand_keypoints = rhand_keypoints[:, :2]
@@ -336,25 +337,26 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
         # Body part comparison
         similarities = []
-        angles_in_degrees = []
+        angles_in_rads = []
 
         # The angle from np.arctan2 will be the angle between the vector and negative x-axis
         local_quads_final = []
         input_quads_final = []
-        local_quads = np.arctan2(y_coor_local, x_coor_local) * 180 / np.pi
-        input_quads = np.arctan2(y_coor_input, x_coor_input) * 180 / np.pi
-        for ele in local_quads:
-            if ele < 0:
-                ele = -180 - ele
+        local_quads = np.arctan2(y_coor_local, x_coor_local) * 180 / np.pi # Conversion from rads
+        input_quads = np.arctan2(y_coor_input, x_coor_input) * 180 / np.pi # ^^
+        for deg in local_quads:
+            if deg < 0:
+                deg = -180 - deg
             else:
-                ele = 180 - ele
-            local_quads_final.append(round(ele, 4))
-        for ele2 in input_quads:
-            if ele2 < 0:
-                ele2 = -180 - ele2
+                deg = 180 - deg
+            local_quads_final.append(round(deg, 4))
+        for deg2 in input_quads:
+            if deg2 < 0:
+                deg2 = -180 - deg2
             else:
-                ele2 = 180 - ele2
-            input_quads_final.append(round(ele2, 4))
+                deg2 = 180 - deg2
+            input_quads_final.append(round(deg2, 4))
+        cur_person.append(input_quads_final)
         # TODO: For skeleton drawing, grab the local_quads_final and input_quads_final above
 
         for vector1, vector2 in zip(input_set, local_set):
@@ -365,19 +367,19 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             if norm1 < 1e-10 or norm2 < 1e-10:
                 # Handle the case where the magnitude is too small
                 similarity = 0.0
-                angle_degrees = 0.0
+                angle = 0.0
             else:
                 similarity = np.dot(vector1, vector2) / (norm1 * norm2)
                 similarity = max(-1, min(1, similarity))
-                angle = np.arccos(similarity)
+                angle = np.arccos(similarity) # Radians
 
             similarities.append(similarity)
-            angles_in_degrees.append(angle)
+            angles_in_rads.append(angle)
 
         average_similarity = np.mean(similarities) # TODO: Pending for changes, valuing lower body part more?
         # print(f"Score: {average_similarity*100}")
         cur_person.append(average_similarity)
-        cur_person.append(angles_in_degrees)
+        cur_person.append(angles_in_rads)
         person_list.append(cur_person)
         if average_similarity > best_score:
             best_score = average_similarity
@@ -396,7 +398,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     #     best_radians = []
     # else:
     best_radians = person_list[best_person][-1] # Return this angle list to front end for skeleton drawing
-    print(best_radians)
+    # print(best_radians)
     # if len(best_radians) == 0:
     #     out_path = "D:/Workspace/Taichine/Voice/Bad.wav" # TODO: Designated Folder/Flash Storage
     #     message = "Adjust your posture to include full body in frame"
@@ -405,8 +407,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     #     play_wav_file(out_path)
     # Comment out this branch above to test without full body images
     # else:
-    for ele in best_radians:
-        passed_angle.append(ele * 180 / math.pi)
+    for rad in best_radians:
+        passed_angle.append(rad * 180 / math.pi)
+        # Conversion to Degrees
     for k, (similarity, angle_degrees) in enumerate(zip(similarities, passed_angle)):
         if (angle_degrees) < tolerance:
             limb_checklist.append(True)
@@ -438,11 +441,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         text_to_speech(message, out_path)
         play_wav_file(out_path) # Comment out for testing without TTS
 
+    # person_list = [[cur_person], [cur_person], ...]
+    # cur_person = [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
+    # average_similarity, [angles_in_rads]]
     output_list.append(pose_pass)
     output_list.append(local_keypoints)
-    output_list.append(input_keypoints)
+    output_list.append(person_list[best_person][1])
     output_list.append(limb_checklist)
-    output_list.append(input_quads_final)
+    output_list.append(person_list[best_person][4])
     output_list.append(local_quads_final)
     print(output_list)
     return output_list
