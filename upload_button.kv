@@ -11,6 +11,14 @@
         pos_hint: {'center_x': 0.5, 'center_y': 0.5}
 
     RelativeLayout:
+        id: rel_layout
+        canvas:
+            Color:
+                rgb: 1, 0, 0
+            Rectangle:
+                group: 'a'
+                size: self.size
+                pos: self.pos
         Button:
             id: exit_button
             # right: root.right
@@ -22,7 +30,7 @@
             # height: 1
             
             pos_hint: {'right': 1, 'top': 0.7}
-            background_color: 1,1,1,1
+            background_color: 0,0,0,0
         
             on_press: root.exit_button()
             # RelativeLayout:
@@ -41,7 +49,7 @@
 
             size_hint: self.parent.width / 1000, self.parent.height / 25000
             # size_hint: self.parent.width / 2048, self.parent.height / 2048
-            background_color: 255,255,255,1
+            background_color: 0,0,0,0
             on_press: root.left_button()
 
             Image:
@@ -61,7 +69,7 @@
             # pos_hint: {'x': 3, 'y': 3}
             size_hint: self.parent.width / 1000, self.parent.height / 25000
             # size_hint: self.parent.width / 2048, self.parent.height / 2048
-            background_color: 255,255,255,1
+            background_color: 0,0,0,0
             on_press: root.right_button()
 
             Image:

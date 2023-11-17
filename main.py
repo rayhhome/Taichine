@@ -276,15 +276,35 @@ class ConfirmScreen(Screen):
       filename, file_type = getFileTypeAndName(self.file_label)
       # self.display_label.text = f'[color=121212]{self.new_filename}.{file_type}'
 
-    # grid_layout = GridLayout(rows=1, orientation='lr-tb', padding=5, size_hint=(1,0.7), pos_hint={'center_x': 0.5,'center_y': 0.5})
+    # grid_layout = GridLayout(rows=1, orientation='lr-tb', padding=5, size_hint=(1, 0.7), pos_hint={'center_x': 0.5,'center_y': 0.55})
     # self.add_widget(grid_layout)
 
     for i in range(num_poses):
       pose_item = PoseSequenceItem()
       pose_item.ids.pose_image.source = self.posesList[i]
       self.ids.grid_layout.add_widget(pose_item)
-
-    textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.7}, cursor_blink=True, multiline=False)
+      # grid_layout.add_widget(pose_item)
+    
+    print("self.ids.grid_layout.children[0].pose_image.pos = ", self.ids.grid_layout.children[0].ids.pose_image.pos)
+    print("self.ids.grid_layout.children[0].pose_image.size = ", self.ids.grid_layout.children[0].ids.pose_image.size)
+    print("\nself.ids.grid_layout.children[0].ids.rel_layout.pos = ", self.ids.grid_layout.children[0].ids.rel_layout.pos)
+    print("self.ids.grid_layout.children[0].ids.rel_layout.size = ", self.ids.grid_layout.children[0].ids.rel_layout.size)
+    pose_item2 = PoseSequenceItem()
+    pose_item2.ids.pose_image.source = 'C:\\Users\\jerry\\user_poses\\mole.png'
+    self.ids.grid_layout.add_widget(pose_item2)
+    # grid_layout.add_widget(pose_item2)
+    # print("self.ids.grid_layout.children[1].pose_image.pos = ", self.ids.grid_layout.children[1].ids.pose_image.pos)
+    # print("self.ids.grid_layout.children[1].pose_image.children = ", self.ids.grid_layout.children[1].ids.pose_image.children)
+    # print("self.ids.grid_layout.children[1].ids.rel_layout.pos = ", self.ids.grid_layout.children[1].ids.rel_layout.pos)
+    
+    # print("\nself.ids.grid_layout.children[1].ids.rel_layout.size = ", self.ids.grid_layout.children[1].ids.rel_layout.size)
+    # print("self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].size = ", self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].size)
+    
+    # print("\nself.ids.grid_layout.children[1].ids.rel_layout.pos = ", self.ids.grid_layout.children[1].ids.rel_layout.pos)
+    # print("self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].pos = ", self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].pos)
+    # print("self.ids.grid_layout.children[0].ids.pose_image.source = ", self.ids.grid_layout.children[0].ids.pose_image.source)
+    # print("self.ids.grid_layout.children[1].ids.pose_image.source = ", self.ids.grid_layout.children[1].ids.pose_image.source)
+    textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.8}, cursor_blink=True, multiline=False)
     textbox.bind(on_text_validate=on_enter)
     self.add_widget(textbox)
     
