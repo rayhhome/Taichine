@@ -332,7 +332,6 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             play_wav_file(out_path)
         else:
             cur_person.append([])
-        # TODO: Voice output here or return to frontend to showcase issue
 ################## End of Hand Comparison #########################
 
         # Body part comparison
@@ -340,8 +339,8 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         angles_in_degrees = []
 
         # The angle from np.arctan2 will be the angle between the vector and negative x-axis
-        local_quads2 = []
-        input_quads2 = []
+        local_quads_final = []
+        input_quads_final = []
         local_quads = np.arctan2(y_coor_local, x_coor_local) * 180 / np.pi
         input_quads = np.arctan2(y_coor_input, x_coor_input) * 180 / np.pi
         for ele in local_quads:
@@ -349,14 +348,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                 ele = -180 - ele
             else:
                 ele = 180 - ele
-            local_quads2.append(round(ele, 4))
+            local_quads_final.append(round(ele, 4))
         for ele2 in input_quads:
             if ele2 < 0:
                 ele2 = -180 - ele2
             else:
                 ele2 = 180 - ele2
-            input_quads2.append(round(ele2, 4))
-        # TODO: For skeleton drawing, grab the local_quads2 and input_quads2 above
+            input_quads_final.append(round(ele2, 4))
+        # TODO: For skeleton drawing, grab the local_quads_final and input_quads_final above
 
         for vector1, vector2 in zip(input_set, local_set):
             norm1 = np.linalg.norm(vector1)
@@ -394,10 +393,11 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     # Comment out the following to check outputs without full body in frame
     # if len(person_list[best_person][1]) != 0:
-    #     best_angles = []
+    #     best_radians = []
     # else:
-    best_angles = person_list[best_person][-1] # Return this angle list to front end for skeleton drawing
-    # if len(best_angles) == 0:
+    best_radians = person_list[best_person][-1] # Return this angle list to front end for skeleton drawing
+    print(best_radians)
+    # if len(best_radians) == 0:
     #     out_path = "D:/Workspace/Taichine/Voice/Bad.wav" # TODO: Designated Folder/Flash Storage
     #     message = "Adjust your posture to include full body in frame"
     #     print(message)
@@ -405,7 +405,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     #     play_wav_file(out_path)
     # Comment out this branch above to test without full body images
     # else:
-    for ele in best_angles:
+    for ele in best_radians:
         passed_angle.append(ele * 180 / math.pi)
     for k, (similarity, angle_degrees) in enumerate(zip(similarities, passed_angle)):
         if (angle_degrees) < tolerance:
@@ -442,8 +442,8 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list.append(local_keypoints)
     output_list.append(input_keypoints)
     output_list.append(limb_checklist)
-    output_list.append(input_quads2)
-    output_list.append(local_quads2)
+    output_list.append(input_quads_final)
+    output_list.append(local_quads_final)
     print(output_list)
     return output_list
 
