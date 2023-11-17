@@ -17,11 +17,14 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
 from kivy.uix.camera import Camera
 from kivy.core.window import Window
+from kivy.graphics import Color, Line, Rectangle, Ellipse
 
 from plyer import filechooser
 import os
 from os import system, getcwd, listdir, makedirs
 from os.path import join, isfile, split
+
+import numpy as np
 
 Window.minimum_width = 800
 Window.minimum_height = 600
@@ -83,18 +86,17 @@ class TrainingScreen(Screen):
   current_seq  = StringProperty('')
   current_pose = StringProperty('')
 
-  def set_reference_image(self, mode, seq_id, pos_id):
-    # Ray: there are two modes: integrated and custom
-    #      integrated: use the default poses
-    #      custom: use the user uploaded poses
-    #      seq_id: the sequence id of the pose, i.e. the folder name
-    #      pos_id: the pose id of the pose, i.e. the image name
-    #        note that the image name should always be 1, 2, 3, 4, 5...
-    #        because the order of the images matters
-
-    #        this means if we want to allow for custom pose sequenes,
-    #        we need rename the images in the folder to these numbers
-    #        according to their order      
+  # Ray: there are two modes: integrated and custom
+  #      integrated: use the default poses
+  #      custom: use the user uploaded poses
+  #      seq_id: the sequence id of the pose, i.e. the folder name
+  #      pos_id: the pose id of the pose, i.e. the image name
+  #        note that the image name should always be 1, 2, 3, 4, 5...
+  #        because the order of the images matters
+  #        this means if we want to allow for custom pose sequenes,
+  #        we need rename the images in the folder to these numbers
+  #        according to their order   
+  def set_reference_image(self, mode, seq_id, pos_id):   
     if mode == 'integrated':
       self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id + '.png')
     elif mode == 'custom':
@@ -134,25 +136,136 @@ class TrainingScreen(Screen):
     #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
     #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
+  # Ray: set the value for the countdown timer
   def set_countdown(self, seconds):
-    # Ray: set the value for the countdown timer
     self.countdown = seconds
 
+  # Ray: actually start the countdown timer 
+  #      and call the callback function when countdown reaches 0
   def start_countdown(self, callback_func):
-    # Ray: actually start the countdown timer 
-    #      and call the callback function when countdown reaches 0
     Animation.cancel_all(self)
     self.anim = Animation(countdown=0, duration=self.countdown)
     self.anim.bind(on_complete=callback_func)
     self.anim.start(self)
 
-  def draw_skeleton(self, joint_data):
+  def draw_reference_skeleton(self, pose_coords):
+    # Deal with input coordinates
+    all_x = pose_coords[:,0]
+    all_y = pose_coords[:,1]
+    min_x = np.min(all_x)
+    max_x = np.max(all_x)
+    min_y = np.min(all_y)
+    max_y = np.max(all_y)
+    input_width = max_x - min_x
+    input_height = max_y - min_y
+
+    # Calculate offsets and scales to fit the canvas
+    x_offset = 0
+    y_offset = 0
+    x_scale = 1
+    y_scale = 1
+
+    draw_width = self.ids.skeleton_canvas.width * 0.9
+    draw_height = self.ids.skeleton_canvas.height * 0.9    
+    input_dimension = input_width / input_height
+    canvas_dimension = draw_width / draw_height
+
+    if input_dimension > canvas_dimension:
+      # Input is wider than canvas
+      x_scale = draw_width / input_width
+      y_scale = x_scale
+      y_offset = (draw_height - input_height * y_scale) / 2
+    else:
+      # Input is taller than canvas
+      y_scale = draw_height / input_height
+      x_scale = y_scale
+      x_offset = (draw_width - input_width * x_scale) / 2
+
+    # Modify coordinates to fit the canvas
+    all_x = (all_x - min_x) * x_scale + x_offset
+    all_y = (all_y - min_y) * y_scale + y_offset
+
+    # Start drawing
+    with self.ids.skeleton_canvas.canvas:
+      # Draw the reference pose
+      Color(0, 0, 1, 1) # Reference in Blue
+
+      # Go through all limbs
+      # Torso -> Right Arm Top
+      Line(points=[all_x[1], all_y[1], all_x[2], all_y[2]], width=2)
+      # Right Arm Top -> Right Arm Middle
+      Line(points=[all_x[2], all_y[2], all_x[3], all_y[3]], width=2)
+      # Right Arm Middle -> Right Hand
+      Line(points=[all_x[3], all_y[3], all_x[4], all_y[4]], width=2)
+      # Torso -> Left Arm Top
+      Line(points=[all_x[1], all_y[1], all_x[5], all_y[5]], width=2)
+      # Left Arm Top -> Left Arm Middle
+      Line(points=[all_x[5], all_y[5], all_x[6], all_y[6]], width=2)
+      # Left Arm Middle -> Left Hand
+      Line(points=[all_x[6], all_y[6], all_x[7], all_y[7]], width=2)
+      # Torso -> Waist
+      Line(points=[all_x[1], all_y[1], all_x[8], all_y[8]], width=2)
+      # Waist -> Right Leg Top
+      Line(points=[all_x[8], all_y[8], all_x[9], all_y[9]], width=2)
+      # Right Leg Top -> Right Leg Middle
+      Line(points=[all_x[9], all_y[9], all_x[10], all_y[10]], width=2)
+      # Right Leg Middle -> Right Foot
+      Line(points=[all_x[10], all_y[10], all_x[11], all_y[11]], width=2)
+      # Waist -> Left Leg Top
+      Line(points=[all_x[8], all_y[8], all_x[12], all_y[12]], width=2)
+      # Left Leg Top -> Left Leg Middle
+      Line(points=[all_x[12], all_y[12], all_x[13], all_y[13]], width=2)
+      # Left Leg Middle -> Left Foot
+      Line(points=[all_x[13], all_y[13], all_x[14], all_y[14]], width=2)
+      # Left Foot -> Left Toe
+      Line(points=[all_x[14], all_y[14], all_x[19], all_y[19]], width=2)
+      # Right Foot -> Right Toe
+      Line(points=[all_x[11], all_y[11], all_x[22], all_y[22]], width=2)
+      # Head -> Torso
+      Line(points=[all_x[0], all_y[0], all_x[1], all_x[1]], width=2)
+      Ellipse(pos=(all_x[0], all_y[0]), size=(20, 20))
+
+  def draw_user_skeleton(self, pose_coords, pose_angles, checklist):
+    # Start drawing
+    with self.ids.skeleton_canvas.canvas:
+      # Draw the user pose
+      Color(0, 1, 0, 1) # Correct in Green
+      Color(1, 0, 0, 1) # Wrong in Red
     pass
 
   def move_on(self):
     print("move_on() called")
     joint_data = backend_process(self.mode, self.current_seq, self.current_pose)
-    self.draw_skeleton(joint_data)
+    
+    if joint_data == None:
+      print("joint_data is None")
+
+    # Drawing pipeline
+    # Extract all joint data
+    pose_pass = joint_data[0]
+    reference_pose_coords = joint_data[1]
+    user_pose_coords = joint_data[2]
+    limb_checklist = joint_data[3]
+    reference_pose_angles = joint_data[4]
+    user_pose_angles = joint_data[5]
+
+    canvas_to_draw = self.ids.skeleton_canvas
+    canvas_to_draw.canvas.clear()  
+
+    # Show Signal
+    with canvas_to_draw.canvas:
+      if pose_pass:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
+      Color(0, 0, 0, 1) # Background in Black
+      Rectangle(pos=(canvas_to_draw.width + 10, canvas_to_draw.width + 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
+
+    # Draw poses  
+    self.draw_reference_skeleton(reference_pose_coords)
+    self.draw_user_skeleton(user_pose_coords, user_pose_angles, limb_checklist)
+
     # Ray (Thoughts on the flow): 
     # Check back_process return
     # If some body part outside of frame:

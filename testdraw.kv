@@ -1,0 +1,36 @@
+#:kivy 2.2.1
+#
+FloatLayout:
+    Widget:
+        size_hint: None, None
+        size: 100, 100
+        pos: 100, 100
+
+        canvas:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+    RelativeLayout:
+        size_hint: None, None
+        size: 100, 100
+        pos: 100, 100
+
+        canvas:
+            Color:
+                rgba: 1, 0, 0, 0.5
+            Rectangle:
+                pos: (0,0) # incorrect
+                size: self.size
+        Widget:
+            size_hint: None, None
+            size: 100, 90
+            pos: 0, 0
+            canvas:
+                Color:
+                    rgba: 0, 1, 0, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size

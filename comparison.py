@@ -357,7 +357,6 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                 deg2 = 180 - deg2
             input_quads_final.append(round(deg2, 4))
         cur_person.append(input_quads_final)
-        # TODO: For skeleton drawing, grab the local_quads_final and input_quads_final above
 
         for vector1, vector2 in zip(input_set, local_set):
             norm1 = np.linalg.norm(vector1)
@@ -448,8 +447,8 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list.append(local_keypoints)
     output_list.append(person_list[best_person][1])
     output_list.append(limb_checklist)
-    output_list.append(person_list[best_person][4])
     output_list.append(local_quads_final)
+    output_list.append(person_list[best_person][4])    
     print(output_list)
     return output_list
 
