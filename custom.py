@@ -84,14 +84,14 @@ class upload_layout(Screen):
         # print(selection[0])
         grid_layout = GridLayout(rows=1, orientation='lr-tb', padding=5, size_hint={1, 0.7}, pos_hint={'center_x': 0.5,'center_y': 0.5})
         self.add_widget(grid_layout)
-        print("grid_layout.height = ", grid_layout.height)
-        print("grid_layout.width = ", grid_layout.width)
+        # print("grid_layout.height = ", grid_layout.height)
+        # print("grid_layout.width = ", grid_layout.width)
         # for i in range(1):
         pose_item1 = PoseSequenceItem()
-        pose_item2 = PoseSequenceItem()
-        pose_item3 = PoseSequenceItem()
-        pose_item4 = PoseSequenceItem()
-        pose_item5 = PoseSequenceItem()
+        # pose_item2 = PoseSequenceItem()
+        # pose_item3 = PoseSequenceItem()
+        # pose_item4 = PoseSequenceItem()
+        # pose_item5 = PoseSequenceItem()
         # image1 = Image(source='icons/no_image_96.png')
         # image2 = Image(source='icons/no_image_96.png')
         # pose_item.ids.pose_image.source = self.posesList[i]
@@ -99,10 +99,18 @@ class upload_layout(Screen):
         # grid_layout.add_widget(image2)
         # grid_layout.add_widget(Button())
         grid_layout.add_widget(pose_item1)
-        grid_layout.add_widget(pose_item2)
-        grid_layout.add_widget(pose_item3)
-        grid_layout.add_widget(pose_item4)
-        grid_layout.add_widget(pose_item5)
+        # grid_layout.add_widget(pose_item2)
+        # grid_layout.add_widget(pose_item3)
+        # grid_layout.add_widget(pose_item4)
+        # grid_layout.add_widget(pose_item5)
+
+        print("\ngrid_layout.children[0].ids.rel_layout.pos = ", grid_layout.children[0].ids.rel_layout.pos)
+        print("grid_layout.children[0].ids.rel_layout.size = ", grid_layout.children[0].ids.rel_layout.size)
+
+        print("\ngrid_layout.children[0].ids.pose_image.pos = ", grid_layout.children[0].ids.pose_image.pos)
+        print("grid_layout.children[0].ids.pose_image.size = ", grid_layout.children[0].ids.pose_image.size)
+
+        
 
 
 
