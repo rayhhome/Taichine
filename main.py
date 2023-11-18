@@ -79,6 +79,8 @@ class SelectionScreen(Screen):
 # setting screen
 class SettingScreen(Screen):
   def set_value(self):
+    global preparation_time
+    global tolerance
     preparation_time = self.ids.preparation_slider.value
     tolerance = self.ids.tolerance_slider.value
     print("Current Preparation Time:", preparation_time)
@@ -86,10 +88,13 @@ class SettingScreen(Screen):
 
 # training screen
 class TrainingScreen(Screen):
-  countdown = NumericProperty(10)
+  countdown = NumericProperty(5)
   mode = StringProperty('')
   current_seq  = StringProperty('')
   current_pose = StringProperty('')
+      
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
 
   def set_reference_image(self, mode, seq_id, pos_id):
     # Ray: there are two modes: integrated and custom
@@ -142,15 +147,16 @@ class TrainingScreen(Screen):
     #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
     #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
-  def set_countdown(self, seconds):
+  def set_countdown(self):
     # Ray: set the value for the countdown timer
-    self.countdown = seconds
+    print(preparation_time)
+    self.countdown = preparation_time
 
   def start_countdown(self, callback_func):
     # Ray: actually start the countdown timer 
     #      and call the callback function when countdown reaches 0
     Animation.cancel_all(self)
-    self.set_countdown(preparation_time)
+    print(preparation_time)
     self.anim = Animation(countdown=0, duration=self.countdown)
     self.anim.bind(on_complete=callback_func)
     self.anim.start(self)
@@ -179,6 +185,7 @@ class TrainingScreen(Screen):
     # Set up countdown timer here, probably shorter than 10 seconds 
     #   (5 seconds? Use set_countdown() to set the time)
     # Start countdown and set call_back to move_on() again
+    self.ids['start_button'].text = "Start"
 
   def on_countdown(self, instance, value):
     # Ray: this is for animation of the start button text

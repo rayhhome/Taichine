@@ -629,6 +629,7 @@ ScreenManager:
     current_screen.manager.get_screen('training').set_reference_image(root.mode, root.id, '1')
     current_screen.manager.transition.direction = 'left'
     current_screen.manager.current = 'training'
+    current_screen.manager.get_screen('training').set_countdown()
     
   Image:
     size_hint: 0.15, 1
