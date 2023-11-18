@@ -79,12 +79,16 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         # Load and parse the JSON files
         with open(user_pose_path, 'r') as file:
             input_data = json.load(file)
+    except FileNotFoundError:
+        print("Error: user JSON files not found.")
+        return
 
+    try:
         with open(ref_pose_path, 'r') as file:
             local_data = json.load(file)
 
     except FileNotFoundError:
-        print("Error: One or both of the provided JSON files not found.")
+        print("Error: reference JSON files not found.")
         return
 
     # TODO: Multiple People Implementation, check Eric's slack message.

@@ -261,19 +261,23 @@ ScreenManager:
         id: camera
         resolution: (640, 480)
         play: True
+        allow_stretch: True
+        keep_ration: True
 
-      FloatLayout:
+      RelativeLayout:
         id: skeleton_canvas
         canvas:
           Color:
             rgb: 0.0, 0.0, 0.0
           Rectangle:
             size: self.size
-            pos: self.pos
+            pos: (0,0)
 
       Image:
         id: reference_image
-        
+        allow_stretch: True
+        keep_ration: True
+                
 <SettingScreen>:
   name: 'setting'
   FloatLayout:
