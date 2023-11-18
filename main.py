@@ -27,6 +27,10 @@ Window.minimum_width = 800
 Window.minimum_height = 600
 # Window.fullscreen = 'auto'
 
+# global variable
+tolerance = 5
+preparation_time = 5
+
 path_selected = None
 # pose item
 class PoseItem(ButtonBehavior, BoxLayout):
@@ -74,7 +78,11 @@ class SelectionScreen(Screen):
 
 # setting screen
 class SettingScreen(Screen):
-  pass
+  def set_value(self):
+    preparation_time = self.ids.preparation_slider.value
+    tolerance = self.ids.tolerance_slider.value
+    print("Current Preparation Time:", preparation_time)
+    print("Current Tolerance: ", tolerance)
 
 # training screen
 class TrainingScreen(Screen):
