@@ -354,6 +354,7 @@ class ConfirmScreen(Screen):
   def confirmed(self):
     src = globals()['path_selected']
     # print("src: ", src)
+    src.reverse()
     dest = []
     # print("self.curr_dir: ", self.curr_dir)
     
@@ -370,7 +371,7 @@ class ConfirmScreen(Screen):
         filename = self.new_filename
 
       # print("   src_path  : ", src_path
-      dest.append(f"{self.curr_dir}\\user_poses\\{self.poseLabel}\\{filename}.{filetype}")
+      dest.append(f"{self.curr_dir}\\user_poses\\{self.poseLabel}\\{i} - {filename}.{filetype}")
       
     # print("src: ", src)
     for j in range(len(dest)):
@@ -383,8 +384,8 @@ class ConfirmScreen(Screen):
       system(cmd)
       print("src: ", src[j])
       print("dest: ", dest[j])
-    # print(selection[0])
-
+    self.posesList = []
+    self.grid_layout.clear_widgets()
     print("done")
 
     # self.on_enter = on_enter()
