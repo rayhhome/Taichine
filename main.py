@@ -150,13 +150,14 @@ class TrainingScreen(Screen):
     # Ray: actually start the countdown timer 
     #      and call the callback function when countdown reaches 0
     Animation.cancel_all(self)
+    self.set_countdown(preparation_time)
     self.anim = Animation(countdown=0, duration=self.countdown)
     self.anim.bind(on_complete=callback_func)
     self.anim.start(self)
 
   def move_on(self):
     print("move_on() called")
-    backend_process(self.mode, self.current_seq, self.current_pose)
+    backend_process(self.mode, self.current_seq, self.current_pose, tolerance)
     # Ray (Thoughts on the flow): 
     # Check back_process return
     # If some body part outside of frame:

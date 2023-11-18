@@ -467,7 +467,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
 
 # TODO @ Hongzhe: Need to implement file search for different references
-def backend_process (mode, pose_name, image_name):
+def backend_process (mode, pose_name, image_name, tolerance):
     # Process the user
     parseImageFromPath("user_input\\", "user_pose_data\\")
 
@@ -478,10 +478,10 @@ def backend_process (mode, pose_name, image_name):
         reference_path = "custom_pose\\" + pose_name + "\\" + image_index + "_keypoints.json"
     user_path = "user_pose_data\\user_keypoints.json"
 
-    print("Comparing User data with " + reference_path)
+    print("Comparing User data with " + reference_path, tolerance)
 
     # Compare and generate output
-    return compare_poses(reference_path, user_path)
+    return compare_poses(reference_path, user_path, tolerance)
 
 # Backend Submodule test code
 # Main function takes in the user image path and a reference name, compare the two poses and provide output
