@@ -205,28 +205,31 @@ class CustomScreen(Screen):
 
   def select_file(self):
     system(f"mkdir {self.poses_folder}")
-    filechooser.open_file(on_selection = self.selected)
+    filechooser.open_file(on_selection = self.selected, multiple=True)
     
   def selected(self, selection):
     # print("len(selection) = ", len(selection))
     if(len(selection) == 0):
       self.cancel = True 
       return
-    print("self.cancel", self.cancel)
-    globals()['path_selected'] = selection[0]
-    print("globals()['path_selected']: ", globals()["path_selected"])
+    # print("self.cancel", self.cancel)
+    # print("selection = ", selection)
+    globals()['path_selected'] = selection
+    # print("globals()['path_selected']: ", globals()["path_selected"])
     
 class PoseSequenceItem(Widget):
-  def exit_button(self):
-    print("\n\nEXIT button pressed!\n\n")
 
-  def left_button(self):
-    print("\n\nLEFT button pressed!\n\n")
+  # def exit_button(self, posesList):
+  #   print("\n\nEXIT button:")
+  #   print("posesList = ", posesList)
 
-  def right_button(self):
-    print("\n\nRIGHT button pressed!\n\n")
-    # for children in self.children:
-    #     print(children)
+  # def left_button(self):
+  #   print("\n\nLEFT button pressed!\n\n")
+
+  # def right_button(self):
+  #   print("\n\nRIGHT button pressed!\n\n")
+  #   # for children in self.children:
+  #   #     print(children)
   pass
 
 class ConfirmScreen(Screen):
@@ -239,6 +242,8 @@ class ConfirmScreen(Screen):
     self.new_filename=""
     self.display_label=None
     self.posesList = []
+    self.filenameList = []
+    self.poseLabel = ""
     # self.textbox = None
 
   def on_pre_enter(self, *largs):
@@ -246,80 +251,97 @@ class ConfirmScreen(Screen):
     # print("new screen globals()['path_selected']: ", globals()['path_selected'])
     #  height=30,
 
-    path_selected = globals()['path_selected']
-    print("path_selected: ", path_selected)
-    pathIsFolder = os.path.isdir(path_selected)
-    
-    if(pathIsFolder):
-      
-      # code from https://www.geeksforgeeks.org/how-to-iterate-over-files-in-directory-using-python/ 
-
-      for file in os.listdir(path_selected):
-        file_path = os.path.join(path_selected, file)
-        if(os.path.isfile(file_path)):
-          self.posesList.append(file_path)
-    else:
-      self.posesList.append(path_selected)
+    self.posesList = globals()['path_selected']
 
     num_poses = len(self.posesList)
-    src_split_list = path_selected.split('\\')
-    self.file_label = src_split_list[-1]
 
+    for j in range(num_poses):
+      splitList = self.posesList[j].split('\\')
+      filename = splitList[-1]
+      self.filenameList.append(filename)
+
+    self.poseLabel = self.filenameList[0].split('.')[0]
+
+    # print("self.filenameList = ", self.filenameList)
     def on_enter(instance): #, value
-      # print("value: ", instance.text)
-      self.new_filename = instance.text
-      filename, file_type = getFileTypeAndName(self.file_label)
-      # self.display_label.text = f'[color=121212]{self.new_filename}.{file_type}'
+      print("value: ", instance.text)
+      self.poseLabel = instance.text
+      self.display_label.text = f'[color=121212]pose / pose sequence name: {instance.text}'
 
     # grid_layout = GridLayout(rows=1, orientation='lr-tb', padding=5, size_hint=(1, 0.7), pos_hint={'center_x': 0.5,'center_y': 0.55})
     # self.add_widget(grid_layout)
-
+    
+    # new children widgets are "added from the front"
     for i in range(num_poses):
       pose_item = PoseSequenceItem()
       pose_item.ids.pose_image.source = self.posesList[i]
+      pose_item.ids.image_label.text = self.filenameList[i]
       self.ids.grid_layout.add_widget(pose_item)
-      # grid_layout.add_widget(pose_item)
     
-    # print("self.ids.grid_layout.children[0].pose_image.pos = ", self.ids.grid_layout.children[0].ids.pose_image.pos)
-    # print("self.ids.grid_layout.children[0].pose_image.size = ", self.ids.grid_layout.children[0].ids.pose_image.size)
-    # print("\nself.ids.grid_layout.children[0].ids.rel_layout.pos = ", self.ids.grid_layout.children[0].ids.rel_layout.pos)
-    # print("self.ids.grid_layout.children[0].ids.rel_layout.size = ", self.ids.grid_layout.children[0].ids.rel_layout.size)
+    self.posesList.reverse()
+
     
-    pose_item2 = PoseSequenceItem()
-    pose_item2.ids.pose_image.source = 'C:\\Users\\jerry\\user_poses\\mole.png'
-    self.ids.grid_layout.add_widget(pose_item2)
-    # print("\n\nself.ids.grid_layout.children", self.ids.grid_layout.children)
-    # print("self.ids.grid_layout.children[0].ids.pose_image.children", self.ids.grid_layout.children[0].ids.pose_image.children)
-    # grid_layout.add_widget(pose_item2)
-    # print("self.ids.grid_layout.children[1].pose_image.pos = ", self.ids.grid_layout.children[1].ids.pose_image.pos)
-    # print("self.ids.grid_layout.children[1].pose_image.children = ", self.ids.grid_layout.children[1].ids.pose_image.children)
-    # print("self.ids.grid_layout.children[1].ids.rel_layout.pos = ", self.ids.grid_layout.children[1].ids.rel_layout.pos)
-    
-    # print("\nself.ids.grid_layout.children[1].ids.rel_layout.size = ", self.ids.grid_layout.children[1].ids.rel_layout.size)
-    # print("self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].size = ", self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].size)
-    
-    # print("\nself.ids.grid_layout.children[1].ids.rel_layout.pos = ", self.ids.grid_layout.children[1].ids.rel_layout.pos)
-    # print("self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].pos = ", self.ids.grid_layout.children[1].ids.rel_layout.canvas.get_group('a')[0].pos)
-    # print("self.ids.grid_layout.children[0].ids.pose_image.source = ", self.ids.grid_layout.children[0].ids.pose_image.source)
-    # print("self.ids.grid_layout.children[1].ids.pose_image.source = ", self.ids.grid_layout.children[1].ids.pose_image.source)
-    textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.8}, cursor_blink=True, multiline=False)
+    # for i2 in range(num_poses):
+    #   print("child ", i2, " : ", self.ids.grid_layout.children[i2].ids.pose_image.source)
+    #   print(f"self.posesList[{i2}] : ", self.posesList[i2])
+    textLabel = Label(text='Enter Pose or Pose Sequence Name Here:', color=(0,0,0,1), pos_hint={'center_x': 0.5, 'center_y': 0.79})
+    self.add_widget(textLabel)
+    textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.75}, cursor_blink=True, multiline=False)
     textbox.bind(on_text_validate=on_enter)
     self.add_widget(textbox)
-    
-    
-    # print("filename: ", filename)
 
     # print("file_label: ", self.file_label)
     # print("path_selected: ", path_selected)
-    # self.display_label = Label(text=f'[color=121212]{self.file_label}', markup=True, size_hint=(0.2, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.6}, background_color=(0,0,1,1))
-    # # self.display_label.bind(text=on_enter)
-  
-    # self.display_image = Image(source=path_selected, size_hint=(0.3, 0.3), pos_hint={'center_x': 0.5, 'center_y': 0.4})
-    
-    # self.add_widget(self.display_image)
-    # self.add_widget(self.display_label)
+    self.display_label = Label(text=f'[color=121212]pose / pose sequence name: {self.poseLabel}', markup=True, size_hint=(0.2, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.71}, background_color=(0,0,1,1))
+    self.add_widget(self.display_label)
 
-  
+  def exit_button(self, img_src):
+    # print("\n\nEXIT button:")
+    # print("img_src = ", img_src)
+    # print("self.posesList: ", self.posesList)
+    # print("self.ids.grid_layout.children[0]: ", self.ids.grid_layout.children[0].ids.pose_image.source)
+    # print("self.ids.grid_layout.children[1]: ", self.ids.grid_layout.children[1].ids.pose_image.source)
+
+    num_poses = len(self.posesList)
+    # print("num_poses", num_poses)
+    # print("len(self.ids.grid_layout.children)", len(self.ids.grid_layout.children))
+    
+    for i in range(num_poses):
+      if(self.posesList[i] == img_src):
+        self.posesList.pop(i)
+        self.ids.grid_layout.remove_widget(self.ids.grid_layout.children[i])
+        break    
+
+  def left_button(self, img_src):
+    # print("\n\nLEFT button pressed!\n\n")
+    # num_poses = len(self.posesList)
+    # # print("num_poses", num_poses)
+    # # print("len(self.ids.grid_layout.children)", len(self.ids.grid_layout.children))
+    num_poses = len(self.posesList)
+
+    for i in range(num_poses):
+      if(self.posesList[i] == img_src):
+        img_index = i
+        break
+    if(img_index == (num_poses - 1)):
+      return
+    else:
+      swap(self.posesList, i, i + 1)
+      swap(self.ids.grid_layout.children, img_index, img_index + 1)
+
+  def right_button(self, img_src):
+    # print("\n\nRIGHT button pressed!\n\n")
+    num_poses = len(self.posesList)
+
+    for i in range(num_poses):
+      if(self.posesList[i] == img_src):
+        img_index = i
+        break
+    if(img_index == 0):
+      return
+    else:
+      swap(self.posesList, i - 1, i)
+      swap(self.ids.grid_layout.children, img_index - 1, img_index)
   
   def confirmed(self):
     src = globals()['path_selected']
@@ -328,22 +350,19 @@ class ConfirmScreen(Screen):
     # print("self.curr_dir: ", self.curr_dir)
     
     # for i in range(len(src)):
-      
-    # removing old filename from path
-    filename, filetype = getFileTypeAndName(src[0]) # = src_split_list.pop(-1)
-    pose_seq_dir = filename
-    # join_char = "\\"
-    # src_path = join_char.join(src_split_list)
     
-    if(self.new_filename != ""):
-      filename = self.new_filename
+    system(f"mkdir {self.curr_dir}\\user_poses\\{self.poseLabel}")
 
-    # print("   src_path  : ", src_path)
-    system(f"mkdir {self.curr_dir}\\user_poses\\{filename}")
-    if(len(self.posesList) == 1):
-      dest.append(f"{self.curr_dir}\\user_poses\\{filename}\\{filename}.{filetype}")
-    else:
-      dest.append(f"{self.curr_dir}\\user_poses\\{pose_seq_dir}")
+
+    for i in range(len(src)):
+
+      filename, filetype = getFileTypeAndName(src[i]) 
+    
+      if(self.new_filename != ""):
+        filename = self.new_filename
+
+      # print("   src_path  : ", src_path
+      dest.append(f"{self.curr_dir}\\user_poses\\{self.poseLabel}\\{filename}.{filetype}")
       
     # print("src: ", src)
     for j in range(len(dest)):
@@ -361,6 +380,11 @@ class ConfirmScreen(Screen):
     print("done")
 
     # self.on_enter = on_enter()
+
+def swap(list, indexA, indexB):
+  temp = list[indexA]
+  list[indexA] = list[indexB]
+  list[indexB] = temp
 
 def getFileTypeAndName(fileSrc):
   print("fileSrc", fileSrc)
