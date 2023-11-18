@@ -280,13 +280,16 @@ class ConfirmScreen(Screen):
       self.ids.grid_layout.add_widget(pose_item)
       # grid_layout.add_widget(pose_item)
     
-    print("self.ids.grid_layout.children[0].pose_image.pos = ", self.ids.grid_layout.children[0].ids.pose_image.pos)
-    print("self.ids.grid_layout.children[0].pose_image.size = ", self.ids.grid_layout.children[0].ids.pose_image.size)
-    print("\nself.ids.grid_layout.children[0].ids.rel_layout.pos = ", self.ids.grid_layout.children[0].ids.rel_layout.pos)
-    print("self.ids.grid_layout.children[0].ids.rel_layout.size = ", self.ids.grid_layout.children[0].ids.rel_layout.size)
+    # print("self.ids.grid_layout.children[0].pose_image.pos = ", self.ids.grid_layout.children[0].ids.pose_image.pos)
+    # print("self.ids.grid_layout.children[0].pose_image.size = ", self.ids.grid_layout.children[0].ids.pose_image.size)
+    # print("\nself.ids.grid_layout.children[0].ids.rel_layout.pos = ", self.ids.grid_layout.children[0].ids.rel_layout.pos)
+    # print("self.ids.grid_layout.children[0].ids.rel_layout.size = ", self.ids.grid_layout.children[0].ids.rel_layout.size)
+    
     pose_item2 = PoseSequenceItem()
     pose_item2.ids.pose_image.source = 'C:\\Users\\jerry\\user_poses\\mole.png'
     self.ids.grid_layout.add_widget(pose_item2)
+    # print("\n\nself.ids.grid_layout.children", self.ids.grid_layout.children)
+    # print("self.ids.grid_layout.children[0].ids.pose_image.children", self.ids.grid_layout.children[0].ids.pose_image.children)
     # grid_layout.add_widget(pose_item2)
     # print("self.ids.grid_layout.children[1].pose_image.pos = ", self.ids.grid_layout.children[1].ids.pose_image.pos)
     # print("self.ids.grid_layout.children[1].pose_image.children = ", self.ids.grid_layout.children[1].ids.pose_image.children)
