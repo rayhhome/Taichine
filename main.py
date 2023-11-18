@@ -28,6 +28,8 @@ import numpy as np
 
 import json
 
+tolerance = 5
+preparation_time = 5
 
 Window.minimum_width = 800
 Window.minimum_height = 600
@@ -76,11 +78,14 @@ class SelectionScreen(Screen):
         menu.add_widget(pose)  
       else:
         print('not a file')
-  pass
 
 # setting screen
 class SettingScreen(Screen):
-  pass
+  def set_value(self):
+    preparation_time = self.ids.preparation_slider.value
+    tolerance = self.ids.tolerance_slider.value
+    print("Current Preparation Time:", preparation_time)
+    print("Current Tolerance: ", tolerance)
 
 # training screen
 class TrainingScreen(Screen):
