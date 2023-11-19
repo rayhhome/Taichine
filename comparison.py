@@ -14,7 +14,6 @@ import pygame
 vertical_vector = np.array([0, 1])
 horizontal_vector = np.array([1, 0])
 
-
 # Prereq: Opened folder in Openpose Root Dir
 def play_wav_file(file_path):
     pygame.init()
@@ -87,7 +86,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         print("Error: One or both of the provided JSON files not found.")
         return
 
-    # TODO: Multiple People Implementation, check Eric's slack message.
+    # Multiple People Implementation
     # Method: No matter how incomplete your posture is, I always just evaluate the one
     # that is the most similar, given that the user is attempting the posture
     # Extract the keypoints from the JSON data
@@ -201,22 +200,22 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         y_coor_input = np.array(y_coor_input)
 
         # Define All Local Inputs
-        head_torsol = local_keypoints[0] - local_keypoints[1]
-        torso_rarmtopl = local_keypoints[1] - local_keypoints[2]
-        rarmtop_rarmmidl = local_keypoints[2] - local_keypoints[3]
-        rarmmid_rhandl = local_keypoints[3] - local_keypoints[4]
-        torso_larmtopl = local_keypoints[1] - local_keypoints[5]
-        larmtop_larmmidl = local_keypoints[5] - local_keypoints[6]
-        larmmid_lhandl = local_keypoints[6] - local_keypoints[7]
-        torso_waistl = local_keypoints[1] - local_keypoints[8]
-        waist_rlegtopl = local_keypoints[8] - local_keypoints[9]
-        rlegtop_rlegmidl = local_keypoints[9] - local_keypoints[10]
-        rlegmid_rfootl = local_keypoints[10] - local_keypoints[11]
-        waist_llegtopl = local_keypoints[8] - local_keypoints[12]
-        llegtop_llegmidl = local_keypoints[12] - local_keypoints[13]
-        llegmid_lfootl = local_keypoints[13] - local_keypoints[14]
-        lfootl = local_keypoints[14] - local_keypoints[19]
-        rfootl = local_keypoints[11] - local_keypoints[22]
+        head_torsol = local_keypoints[0] - local_keypoints[1] # Head
+        torso_rarmtopl = local_keypoints[1] - local_keypoints[2] # Shoulder (Arm)
+        rarmtop_rarmmidl = local_keypoints[2] - local_keypoints[3] # Arm
+        rarmmid_rhandl = local_keypoints[3] - local_keypoints[4] # Arm
+        torso_larmtopl = local_keypoints[1] - local_keypoints[5] # Shoulder (Arm)
+        larmtop_larmmidl = local_keypoints[5] - local_keypoints[6] # Arm
+        larmmid_lhandl = local_keypoints[6] - local_keypoints[7] # Arm
+        torso_waistl = local_keypoints[1] - local_keypoints[8] # Upper Body
+        waist_rlegtopl = local_keypoints[8] - local_keypoints[9] # Waist (Leg)
+        rlegtop_rlegmidl = local_keypoints[9] - local_keypoints[10] # Leg
+        rlegmid_rfootl = local_keypoints[10] - local_keypoints[11] # Leg
+        waist_llegtopl = local_keypoints[8] - local_keypoints[12] # Waist (Leg)
+        llegtop_llegmidl = local_keypoints[12] - local_keypoints[13] # Leg
+        llegmid_lfootl = local_keypoints[13] - local_keypoints[14] # Leg
+        lfootl = local_keypoints[14] - local_keypoints[19] # Feet (Leg)
+        rfootl = local_keypoints[11] - local_keypoints[22] # Feet (Leg)
 
         userisfist_left = False
         userisfist_right = False
@@ -390,10 +389,11 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     limb_checklist = [] # Passing to Frontend for limb correctness drawing
     max_degrees = 0
-    error_list = []
-    passed_angle = [] 
+    error_namelist = []
+    error_angle = []
+    sentence_list = []
 
-    # Comment out the following to check outputs without full body in frame
+    # Uncomment the following to check outputs without full body in frame
     # if len(person_list[best_person][1]) != 0:
     #     best_radians = []
     # else:
@@ -407,25 +407,38 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     #     play_wav_file(out_path)
     # Comment out this branch above to test without full body images
     # else:
-    for rad in best_radians:
-        passed_angle.append(rad * 180 / math.pi)
+    word_choice = [["inwards", "outwards"], ["upwards", "downwards"]]
+    angle_differences = [(a - b + 180) % 360 - 180 for a, b in zip(person_list[best_person][4], local_quads_final)]
+    # print(angle_differences)
+    # for rad in best_radians:
+    #     passed_angle.append(rad * 180 / math.pi)
         # Conversion to Degrees
-    for k, (similarity, angle_degrees) in enumerate(zip(similarities, passed_angle)):
-        if (angle_degrees) < tolerance:
+    for k, (similarity, angle_degrees) in enumerate(zip(similarities, angle_differences)):
+        if abs(angle_degrees) < tolerance:
             limb_checklist.append(True)
             continue
         else:
             if math.isnan(angle_degrees):
-                print(f"Angle (in degrees) between {name_list[k]} and reference pose: 0.0000")
+                continue
+                # print(f"Angle (in degrees) between {name_list[k]} and reference pose: 0.0000")
             else:
-                print(f"Angle (in degrees) between {name_list[k]} and reference pose: {(angle_degrees):.4f}")
+                if k in [1, 4, 8, 11]: # Representing Shoulder and Waist, Up and Down would be make more sense on those joints
+                    m = 1
+                else:
+                    m = 0
+                if angle_degrees > 0: # Comparing to decide whether user have overdone or underdone the pose
+                    n = 0
+                else:
+                    n = 1
+                message = f"Turn your {name_list[k]} {word_choice[m][n]} by {abs(round(angle_degrees))} degrees"
+                sentence_list.append(message)
                 limb_checklist.append(False)
-                error_list.append(name_list[k])
-        if angle_degrees > max_degrees:
-            max_degrees = angle_degrees
-            max_k = k
+                error_namelist.append(name_list[k])
+                error_angle.append(angle_degrees)
+            if angle_degrees > max_degrees:
+                max_degrees = angle_degrees         
 
-    if not error_list: # All poses pass == Error list empty
+    if not error_namelist: # All poses pass == Error list empty
         message = "Great, you made it!"
         out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Designated Folder/Flash Storage
         print("Great, you made it! You mastered the pose.")
@@ -433,10 +446,10 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         play_wav_file(out_path)
         pose_pass = True
     else:
-        worst_angle = round(max(passed_angle))
-        message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
-        # TODO: Leg Instructions need to be compared to the an axis line representing center of body (Joint angle + Ref Angle)
-        # (0, 8) 
+        # worst_angle = round(max(angle_differences, key=abs))
+        # message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
+        print(sentence_list)
+        message = sentence_list[-1]
         out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
         text_to_speech(message, out_path)
         play_wav_file(out_path) # Comment out for testing without TTS
@@ -448,11 +461,15 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list.append(local_keypoints)
     output_list.append(person_list[best_person][1])
     output_list.append(limb_checklist)
-    output_list.append(person_list[best_person][4])
-    output_list.append(local_quads_final)
+    output_list.append(person_list[best_person][4]) # User Angles
+    output_list.append(local_quads_final) # Ref Angles
+
     print(output_list)
     return output_list
 
+
+    # For instructions: Take difference in joint angles and direction,
+    # instruct them
 
     # TODO: Instruction wording, derive from angles with direction, and give
     # corresponding angles
