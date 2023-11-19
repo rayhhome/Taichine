@@ -58,8 +58,8 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list = []
     pose_pass = False
     name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
-               "Left_Lowerarm", "Torso", "Right_Waist", "Right_Thigh", "Right_Calf", 
-               "Left_Waist", "Left_Thigh", "Left_Calf", "Left_Feet", "Right_Feet"]
+               "Left_Lowerarm", "Torso", "Right_Waist", "Left_Waist", "Right_Thigh", "Right_Calf", 
+               "Left_Thigh", "Left_Calf", "Left_Feet", "Right_Feet"]
 
     body_parts = {
         'head': ['Head'],
@@ -176,9 +176,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         larmmid_lhand = input_keypoints[6] - input_keypoints[7]
         torso_waist = input_keypoints[1] - input_keypoints[8]
         waist_rlegtop = input_keypoints[8] - input_keypoints[9]
+        waist_llegtop = input_keypoints[8] - input_keypoints[12]
         rlegtop_rlegmid = input_keypoints[9] - input_keypoints[10]
         rlegmid_rfoot = input_keypoints[10] - input_keypoints[11]
-        waist_llegtop = input_keypoints[8] - input_keypoints[12]
         llegtop_llegmid = input_keypoints[12] - input_keypoints[13]
         llegmid_lfoot = input_keypoints[13] - input_keypoints[14]
         lfoot = input_keypoints[14] - input_keypoints[19]
@@ -187,9 +187,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         input_set = [
             tuple(head_torso), tuple(torso_rarmtop), tuple(rarmtop_rarmmid),
             tuple(rarmmid_rhand), tuple(torso_larmtop), tuple(larmtop_larmmid),
-            tuple(larmmid_lhand), tuple(torso_waist), tuple(waist_llegtop),
-            tuple(llegtop_llegmid), tuple(llegmid_lfoot), tuple(waist_rlegtop),
-            tuple(rlegtop_rlegmid), tuple(rlegmid_rfoot), tuple(lfoot), tuple(rfoot)
+            tuple(larmmid_lhand), tuple(torso_waist), tuple(waist_rlegtop),
+            tuple(waist_llegtop), tuple(rlegtop_rlegmid), tuple(rlegmid_rfoot),
+            tuple(llegtop_llegmid), tuple(llegmid_lfoot), tuple(lfoot), tuple(rfoot)
         ]
         x_coor_input = []
         y_coor_input = []
@@ -209,9 +209,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         larmmid_lhandl = local_keypoints[6] - local_keypoints[7] # Arm
         torso_waistl = local_keypoints[1] - local_keypoints[8] # Upper Body
         waist_rlegtopl = local_keypoints[8] - local_keypoints[9] # Waist (Leg)
+        waist_llegtopl = local_keypoints[8] - local_keypoints[12] # Waist (Leg)
         rlegtop_rlegmidl = local_keypoints[9] - local_keypoints[10] # Leg
         rlegmid_rfootl = local_keypoints[10] - local_keypoints[11] # Leg
-        waist_llegtopl = local_keypoints[8] - local_keypoints[12] # Waist (Leg)
         llegtop_llegmidl = local_keypoints[12] - local_keypoints[13] # Leg
         llegmid_lfootl = local_keypoints[13] - local_keypoints[14] # Leg
         lfootl = local_keypoints[14] - local_keypoints[19] # Feet (Leg)
@@ -225,9 +225,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         local_set = [
             tuple(head_torsol), tuple(torso_rarmtopl), tuple(rarmtop_rarmmidl),
             tuple(rarmmid_rhandl), tuple(torso_larmtopl), tuple(larmtop_larmmidl),
-            tuple(larmmid_lhandl), tuple(torso_waistl), tuple(waist_llegtopl),
-            tuple(llegtop_llegmidl), tuple(llegmid_lfootl), tuple(waist_rlegtopl),
-            tuple(rlegtop_rlegmidl), tuple(rlegmid_rfootl), tuple(lfootl), tuple(rfootl)
+            tuple(larmmid_lhandl), tuple(torso_waistl), tuple(waist_rlegtopl),
+            tuple(waist_llegtopl), tuple(rlegtop_rlegmidl), tuple(rlegmid_rfootl),
+            tuple(llegtop_llegmidl), tuple(llegmid_lfootl), tuple(lfootl), tuple(rfootl)
         ]
         x_coor_local = []
         y_coor_local = []
@@ -422,7 +422,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                 continue
                 # print(f"Angle (in degrees) between {name_list[k]} and reference pose: 0.0000")
             else:
-                if k in [1, 4, 8, 11]: # Representing Shoulder and Waist, Up and Down would be make more sense on those joints
+                if k in [1, 4, 8, 9]: # Representing Shoulder and Waist, Up and Down would be make more sense on those joints
                     m = 1
                 else:
                     m = 0
