@@ -502,13 +502,13 @@ ScreenManager:
         rows: 1
         orientation: 'lr-tb'
         pos_hint: {'center_x': 0.50,'center_y': 0.55}
-        size_hint: 1.0, 0.7
-        canvas:
-          Color:
-            rgb: 0.0, 0.0, 1.0
-          Rectangle:
-            size: self.size
-            pos: self.pos
+        size_hint: 1.0, 0.6
+        # canvas:
+        #   Color:
+        #     rgb: 0.0, 0.0, 1.0
+        #   Rectangle:
+        #     size: self.size
+        #     pos: self.pos
           
 
       Button:
@@ -525,6 +525,7 @@ ScreenManager:
 <PoseSequenceItem@RelativeLayout>:
   
   # RelativeLayout:
+   
   Image:
     id: pose_image
     source: 'icons/no_image_96.png'
@@ -533,32 +534,10 @@ ScreenManager:
     height: self.parent.height
     # pos_hint: {'center_x': 0.5, 'center_y': 0.5}
     pos: self.parent.pos
-    allow_stretch: True
-    keep_ratio: False
+    # allow_stretch: True
+    # keep_ratio: False
+    
 
-    # RelativeLayout:
-    #   id: rel_layout
-    #   # pos_hint: {'top': 0.9, 'right': 0.5, }
-    #   # pos: self.parent.pos
-    #   # width: self.parent.width
-    #   # height: self.parent.height
-    #   # pos: {'top': 0.9, 'right': 0.9, }
-    #   # center_x: self.parent.center_x - self.parent.width
-    #   # center_y: self.parent.top - (self.parent.height / 2)
-    #   # size: self.parent.size
-    #   # x: self.parent.right - self.width
-    #   # y: self.parent.top - self.height
-    #   x: self.parent.x
-    #   y: self.parent.y
-    #   # this also seems to give fairly consistent results with the PoseSequenceItems
-    #   # pos: self.parent.x + 10, self.parent.y
-    #   canvas:
-    #     Color:
-    #       rgb: 1, 0, 0
-    #     Rectangle:
-    #       group: 'a'
-    #       size: self.size
-    #       # pos: self.pos
     Button:
       id: exit_button
       # right: root.right
@@ -572,8 +551,9 @@ ScreenManager:
       # pos: self.parent.x + 10, self.parent.y
       x: self.parent.right - self.width
       y: self.parent.top - self.height
-      on_press: root.exit_button()
-     
+      # on_press: root.exit_button(self.parent.parent.parent.parent.parent.parent.posesList)
+      on_press: root.parent.parent.parent.parent.exit_button(self.parent.source)
+
       Image:
         id:exit_button_image
         source: 'icons/exit-icon.png'
@@ -582,7 +562,17 @@ ScreenManager:
         # center_x: self.parent.center_x
         # center_y: self.parent.center_y
         pos: self.parent.pos
-           
+    # The labels needs to be placed here otherwise they all stack on top of each other
+    # in first grid cell
+    Label:
+      id: image_label
+      text: 'No Image Selected'
+      center_x: self.parent.center_x
+      y: self.parent.top - self.height
+      # width: self.parent.width
+      color: 0, 0, 0, 1
+      background_color: 0, 0, 0, 0
+
     Button:
       id: left_button
       # pos_hint: {'right': 0.5, 'top': 0.2}
@@ -592,7 +582,8 @@ ScreenManager:
       x: self.parent.center_x - self.width
       y: self.parent.y
       background_color: 255,255,255,1
-      on_press: root.left_button()
+      # on_press: root.left_button()
+      on_press: root.parent.parent.parent.parent.left_button(self.parent.source)
 
       Image:
         id:left_button_image
@@ -614,7 +605,8 @@ ScreenManager:
       y: self.parent.y
       # size_hint: self.parent.width / 2048, self.parent.height / 2048
       background_color: 255,255,255,1
-      on_press: root.right_button()
+      # on_press: root.right_button()
+      on_press: root.parent.parent.parent.parent.right_button(self.parent.source)
 
       Image:
         id:right_button_image
@@ -642,6 +634,7 @@ ScreenManager:
     current_screen.manager.get_screen('training').set_reference_image(root.mode, root.id, '1')
     current_screen.manager.transition.direction = 'left'
     current_screen.manager.current = 'training'
+    current_screen.manager.get_screen('training').set_countdown()
     
   Image:
     size_hint: 0.15, 1
