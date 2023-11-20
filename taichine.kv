@@ -238,6 +238,7 @@ ScreenManager:
         font_size: self.height * 0.35
         pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         on_press: 
+          root.reset_countdown()
           root.manager.transition.direction = 'right'
           root.manager.current = 'selection'
 

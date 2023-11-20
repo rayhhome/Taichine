@@ -33,7 +33,7 @@ preparation_time = 5
 
 Window.minimum_width = 800
 Window.minimum_height = 600
-# Window.fullscreen = 'auto'
+Window.fullscreen = 'auto'
 
 # global variable
 tolerance = 5
@@ -151,6 +151,12 @@ class TrainingScreen(Screen):
     #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
     #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
+  def pause_countdown(self):
+    self.anim.stop(self)
+
+  def reset_countdown(self):
+    Animation.cancel_all(self)
+
   def set_countdown(self):
     # Ray: set the value for the countdown timer
     print(preparation_time)
@@ -256,39 +262,40 @@ class TrainingScreen(Screen):
 
   def move_on(self):
     print("move_on() called")
+    global tolerance
+    joint_data = backend_process(self.mode, self.current_seq, self.current_pose, tolerance)
     
-    # joint_data = backend_process(self.mode, self.current_seq, self.current_pose)
-    
-    # if joint_data == None:
-    #   print("joint_data is None")
+    if joint_data == None:
+      print("joint_data is None")
+      return
 
     # # Drawing pipeline
     # # Extract all joint data
-    # pose_pass = joint_data[0]
-    # reference_pose_coords = joint_data[1]
-    # user_pose_coords = joint_data[2]
-    # limb_checklist = joint_data[3]
-    # reference_pose_angles = joint_data[4]
-    # user_pose_angles = joint_data[5]
+    pose_pass = joint_data[0]
+    reference_pose_coords = joint_data[1]
+    user_pose_coords = joint_data[2]
+    limb_checklist = joint_data[3]
+    reference_pose_angles = joint_data[4]
+    user_pose_angles = joint_data[5]
 
     canvas_to_draw = self.ids.skeleton_canvas
     canvas_to_draw.canvas.clear()  
 
     # Show Signal
     with canvas_to_draw.canvas:
-    #   if pose_pass:
-    #     Color(0, 1, 0, 1) # Correct in Green
-    #   else:
-    #     Color(1, 0, 0, 1) # Wrong in Red
-    #   Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
+      if pose_pass:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
       Color(0, 0, 0, 1) # Background in Black
       Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
 
-    with open("SampleOutput\\1\\1_keypoints.json", 'r') as file:
-      local_data = json.load(file)
-    reference_pose_coords = local_data["people"][0]["pose_keypoints_2d"]
-    reference_pose_coords = np.array(reference_pose_coords).reshape(-1, 3)
-    reference_pose_coords = reference_pose_coords[:, :2]
+    # with open("SampleOutput\\1\\1_keypoints.json", 'r') as file:
+    #   local_data = json.load(file)
+    # reference_pose_coords = local_data["people"][0]["pose_keypoints_2d"]
+    # reference_pose_coords = np.array(reference_pose_coords).reshape(-1, 3)
+    # reference_pose_coords = reference_pose_coords[:, :2]
 
     # Draw poses  
     self.draw_reference_skeleton(reference_pose_coords)
@@ -296,15 +303,6 @@ class TrainingScreen(Screen):
 
     # Ray (Thoughts on the flow): 
     # Check back_process return
-    # If some body part outside of frame:
-    #   Display flashing warning
-    #   Verbal warning played
-    # Else if some body part is wrong:
-    #   Display skelectons with wrong body part
-    #   Verbal instruction played
-    # Else:
-    # -- IF MVP --
-    #   Display congratulations (Probably need a result screen, TBD)
     # -- IF FULL (WITH POSE SEQUENCE) --
     #   If last pose:
     #     Display congratulations (Probably need a result screen, TBD)

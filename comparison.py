@@ -5,7 +5,8 @@ import sys
 import subprocess
 import argparse
 import atexit
-import os
+from os.path import exists, join
+from os import makedirs
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 import pygame
@@ -103,6 +104,10 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     if not input_data["people"]:
         print("Error: No person found")
         return
+    
+    # Create directory
+    if not exists(join(".","voice")):
+        makedirs(join(".","voice"))
  
     best_score = 0
     best_person = 0
@@ -444,14 +449,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                 error_namelist.append(name_list[k])
                 error_angle.append(angle_degrees)
             if angle_degrees > max_degrees:
-                max_degrees = angle_degrees         
+                max_degrees = angle_degrees 
 
     if not error_namelist: # All poses pass == Error list empty
         message = "Great, you made it!"
         out_path = f"{path}/Good.wav" # TODO: Designated Folder/Flash Storage
         print("Great, you made it! You mastered the pose.")
-        text_to_speech(message, out_path)
-        play_wav_file(out_path)
+        # text_to_speech(message, out_path)
+        # play_wav_file(out_path)
         pose_pass = True
     else:
         # worst_angle = round(max(angle_differences, key=abs))
@@ -492,7 +497,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
 # TODO @ Hongzhe: Need to implement file search for different references
 def backend_process (mode, pose_name, image_name, tolerance):
-    # Process the user
+    # Process the user 
     parseImageFromPath("user_input\\", "user_pose_data\\")
 
     # Get reference
