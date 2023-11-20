@@ -5,6 +5,7 @@ import sys
 import subprocess
 import argparse
 import atexit
+import os
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 import pygame
@@ -55,6 +56,9 @@ def text_to_speech(text, out_path):
 # }
 def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
+    path = './voice'
+    if not os.path.exists(path):
+        os.mkdir(path)
     output_list = []
     pose_pass = False
     name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
@@ -324,14 +328,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             cur_person.append(["right"])
             message = "Check your Right Hand Posture!"
             print(message)
-            out_path = "D:/Workspace/Taichine/Voice/Rhand.wav" # TODO: Designated Folder/Flash Storage
+            out_path = f"{path}/Rhand.wav" # TODO: Designated Folder/Flash Storage
             text_to_speech(message, out_path)
             play_wav_file(out_path)
         elif localisfist_left != userisfist_left:
             cur_person.append(["left"])
             message = "Check your Left Hand Posture!"
             print(message)
-            out_path = "D:/Workspace/Taichine/Voice/Lhand.wav" # TODO: Designated Folder/Flash Storage
+            out_path = f"{path}/Lhand.wav" # TODO: Designated Folder/Flash Storage
             text_to_speech(message, out_path)
             play_wav_file(out_path)
         else:
@@ -410,6 +414,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     #     play_wav_file(out_path)
     # Comment out this branch above to test without full body images
     # else:
+    # TODO: Check torso and head first before checking rest of the body parts
     word_choice = [["inwards", "outwards"], ["upwards", "downwards"]]
     angle_differences = [(a - b + 180) % 360 - 180 for a, b in zip(person_list[best_person][4], local_quads_final)]
     # print(angle_differences)
@@ -443,7 +448,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     if not error_namelist: # All poses pass == Error list empty
         message = "Great, you made it!"
-        out_path = "D:/Workspace/Taichine/Voice/Good.wav" # TODO: Designated Folder/Flash Storage
+        out_path = f"{path}/Good.wav" # TODO: Designated Folder/Flash Storage
         print("Great, you made it! You mastered the pose.")
         text_to_speech(message, out_path)
         play_wav_file(out_path)
@@ -453,7 +458,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         # message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
         print(sentence_list)
         message = sentence_list[-1]
-        out_path = "D:/Workspace/Taichine/Voice/Angle.wav"
+        out_path = f"{path}/Angle.wav"
         text_to_speech(message, out_path)
         play_wav_file(out_path) # Comment out for testing without TTS
 
