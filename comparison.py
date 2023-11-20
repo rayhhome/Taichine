@@ -2,46 +2,15 @@ import json
 import numpy as np
 import math
 import sys
-import subprocess
 import argparse
-import atexit
 import pyttsx3
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
-import pygame
 
 # Globals
 # Define a fixed vertical vector pointing straight up
 vertical_vector = np.array([0, 1])
 horizontal_vector = np.array([1, 0])
-
-# Prereq: Opened folder in Openpose Root Dir
-def play_wav_file(file_path):
-    pygame.init()
-    pygame.mixer.init()
-
-    sound = pygame.mixer.Sound(file_path)
-    sound.play()
-    return
-
-# For unit Testing
-# def text_to_speech(text, out_path):
-#     # Construct the command to invoke the TTS engine
-#     command = ["tts", "--text", text, "--out_path", out_path]
-
-#     try:
-#         # Run the command and capture the output
-#         subprocess.run(command, check=True, shell=True)
-#         subprocess.run(command)
-#         print(f"TTS successfully generated at {out_path}")
-#     except subprocess.CalledProcessError as e:
-#         print(f"Error running TTS command: {e}")
-
-# For Efficiency
-def text_to_speech(text, out_path):
-    # Construct the command to invoke the TTS engine
-    command = ["tts", "--text", text, "--out_path", out_path]
-    subprocess.run(command)
 
 
 # Expect to receive a tolerance level from front end
@@ -93,7 +62,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     # Extract the keypoints from the JSON data
 
     # Case: No Person in Frame
-    while not input_data["people"]:
+    if not input_data["people"]:
         print("Error: No person found")
         # return
  
@@ -132,7 +101,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
         # Reshape the arrays to have shape (n, 3)
         input_keypoints = np.array(input_keypoints).reshape(-1, 3)
-        input_keypoints = input_keypoints[:, :2]
+        input_keypoints = input_keypoints[:, :2] # Remove confidence interval
         cur_person.append(input_keypoints)  
 
 
@@ -523,9 +492,6 @@ def backend_process (mode, pose_name, image_name, tolerance):
 
 # TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
 # Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.
-# TODO: Just draw a vertical reference line for comparing leg angles.
 
 # TODO: Feedbacks of posture analysis, limb specific instructions.
 # Raise/Lower {Left/Right} {limb name}, by {x} degrees. I have all limbs labelled so should be fine.
-# TODO: Priortize lower body part, assigning weight for different body parts
-# TODO: Should be a tolerance threshold for angle? How much should it be?
