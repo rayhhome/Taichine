@@ -2,47 +2,15 @@ import json
 import numpy as np
 import math
 import sys
-import subprocess
 import argparse
-import atexit
-from os.path import exists, join
-from os import makedirs
+# import pyttsx3
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
-import pygame
 
 # Globals
 # Define a fixed vertical vector pointing straight up
 vertical_vector = np.array([0, 1])
 horizontal_vector = np.array([1, 0])
-
-# Prereq: Opened folder in Openpose Root Dir
-def play_wav_file(file_path):
-    pygame.init()
-    pygame.mixer.init()
-
-    sound = pygame.mixer.Sound(file_path)
-    sound.play()
-    return
-
-# For unit Testing
-# def text_to_speech(text, out_path):
-#     # Construct the command to invoke the TTS engine
-#     command = ["tts", "--text", text, "--out_path", out_path]
-
-#     try:
-#         # Run the command and capture the output
-#         subprocess.run(command, check=True, shell=True)
-#         subprocess.run(command)
-#         print(f"TTS successfully generated at {out_path}")
-#     except subprocess.CalledProcessError as e:
-#         print(f"Error running TTS command: {e}")
-
-# For Efficiency
-def text_to_speech(text, out_path):
-    # Construct the command to invoke the TTS engine
-    command = ["tts", "--text", text, "--out_path", out_path]
-    subprocess.run(command)
 
 
 # Expect to receive a tolerance level from front end
@@ -57,21 +25,18 @@ def text_to_speech(text, out_path):
 # }
 def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
-    path = './voice'
-    if not os.path.exists(path):
-        os.mkdir(path)
     output_list = []
     pose_pass = False
-    name_list=["Head", "Right_Shoulder", "Right_Upperarm", "Right_Lowerarm", "Left_Shoulder", "Left_Upperarm",
-               "Left_Lowerarm", "Torso", "Right_Waist", "Left_Waist", "Right_Thigh", "Right_Calf", 
-               "Left_Thigh", "Left_Calf", "Left_Feet", "Right_Feet"]
+    name_list=["Head", "Right Shoulder", "Right Upperarm", "Right Lowerarm", "Left Shoulder", "Left Upperarm",
+               "Left Lowerarm", "Torso", "Right Waist", "Left Waist", "Right Thigh", "Right Calf", 
+               "Left Thigh", "Left Calf", "Left Feet", "Right Feet"]
 
     body_parts = {
         'head': ['Head'],
-        'upperbody': ['Torso', 'Left_Waist', 'Right_Waist'], 
-        'arms': ['Right_Shoulder', 'Left_Shoulder', 'Right_Upperarm', 'Right_Lowerarm', 'Left_Upperarm', 'Left_Lowerarm'],
-        'legs': ['Left_Calf', 'Right_Calf', 'Left_Thigh', 'Right_Thigh'],
-        'feet': ['Left_Feet', 'Right_Feet']
+        'upperbody': ['Torso', 'Left Waist', 'Right Waist'], 
+        'arms': ['Right Shoulder', 'Left Shoulder', 'Right Upperarm', 'Right Lowerarm', 'Left Upperarm', 'Left Lowerarm'],
+        'legs': ['Left Calf', 'Right Calf', 'Left Thigh', 'Right Thigh'],
+        'feet': ['Left Feet', 'Right Feet']
 }
     
     print(f"Current Tolerance Angle: {tolerance}")
@@ -103,11 +68,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     # Case: No Person in Frame
     if not input_data["people"]:
         print("Error: No person found")
-        return
-    
-    # Create directory
-    if not exists(join(".","voice")):
-        makedirs(join(".","voice"))
+        # return
  
     best_score = 0
     best_person = 0
@@ -144,7 +105,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
         # Reshape the arrays to have shape (n, 3)
         input_keypoints = np.array(input_keypoints).reshape(-1, 3)
-        input_keypoints = input_keypoints[:, :2]
+        input_keypoints = input_keypoints[:, :2] # Remove confidence interval
         cur_person.append(input_keypoints)  
 
 
@@ -333,16 +294,12 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             cur_person.append(["right"])
             message = "Check your Right Hand Posture!"
             print(message)
-            out_path = f"{path}/Rhand.wav" # TODO: Designated Folder/Flash Storage
-            text_to_speech(message, out_path)
-            play_wav_file(out_path)
+            pyttsx3.speak(message)
         elif localisfist_left != userisfist_left:
             cur_person.append(["left"])
             message = "Check your Left Hand Posture!"
             print(message)
-            out_path = f"{path}/Lhand.wav" # TODO: Designated Folder/Flash Storage
-            text_to_speech(message, out_path)
-            play_wav_file(out_path)
+            pyttsx3.speak(message)
         else:
             cur_person.append([])
 ################## End of Hand Comparison #########################
@@ -388,7 +345,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             angles_in_rads.append(angle)
 
         average_similarity = np.mean(similarities) # TODO: Pending for changes, valuing lower body part more?
-        # print(f"Score: {average_similarity*100}")
+        print(f"Score: {average_similarity*100}")
         cur_person.append(average_similarity)
         cur_person.append(angles_in_rads)
         person_list.append(cur_person)
@@ -419,7 +376,10 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     #     play_wav_file(out_path)
     # Comment out this branch above to test without full body images
     # else:
-    # TODO: Check torso and head first before checking rest of the body parts
+    # TODO: Check torso and head first before checking rest of the body parts according to Taichi expert
+    # (head_torsol, torso_waistl), (head_torso, torso_waist)
+    # [0] and [7] compare the rads -> tolerance, give errors if those are wrong
+
     word_choice = [["inwards", "outwards"], ["upwards", "downwards"]]
     angle_differences = [(a - b + 180) % 360 - 180 for a, b in zip(person_list[best_person][4], local_quads_final)]
     # print(angle_differences)
@@ -453,19 +413,15 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     if not error_namelist: # All poses pass == Error list empty
         message = "Great, you made it!"
-        out_path = f"{path}/Good.wav" # TODO: Designated Folder/Flash Storage
         print("Great, you made it! You mastered the pose.")
-        # text_to_speech(message, out_path)
-        # play_wav_file(out_path)
+        pyttsx3.speak(message)
         pose_pass = True
     else:
         # worst_angle = round(max(angle_differences, key=abs))
         # message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
         print(sentence_list)
         message = sentence_list[-1]
-        out_path = f"{path}/Angle.wav"
-        text_to_speech(message, out_path)
-        play_wav_file(out_path) # Comment out for testing without TTS
+        pyttsx3.speak(message)
 
     # person_list = [[cur_person], [cur_person], ...]
     # cur_person = [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
@@ -474,8 +430,10 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list.append(local_keypoints)
     output_list.append(person_list[best_person][1])
     output_list.append(limb_checklist)
-    output_list.append(local_quads_final)
-    output_list.append(person_list[best_person][4])    
+    output_list.append(person_list[best_person][4]) # User Angles
+    output_list.append(local_quads_final) # Ref Angles
+    output_list.append(person_list[best_person][5]) # Score
+
     print(output_list)
     return output_list
 
@@ -537,9 +495,6 @@ def backend_process (mode, pose_name, image_name, tolerance):
 
 # TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
 # Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.
-# TODO: Just draw a vertical reference line for comparing leg angles.
 
 # TODO: Feedbacks of posture analysis, limb specific instructions.
 # Raise/Lower {Left/Right} {limb name}, by {x} degrees. I have all limbs labelled so should be fine.
-# TODO: Priortize lower body part, assigning weight for different body parts
-# TODO: Should be a tolerance threshold for angle? How much should it be?

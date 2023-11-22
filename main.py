@@ -92,6 +92,7 @@ class SettingScreen(Screen):
     tolerance = self.ids.tolerance_slider.value
     print("Current Preparation Time:", preparation_time)
     print("Current Tolerance: ", tolerance)
+    
 
 # training screen
 class TrainingScreen(Screen):
@@ -99,6 +100,13 @@ class TrainingScreen(Screen):
   mode = StringProperty('')
   current_seq  = StringProperty('')
   current_pose = StringProperty('')
+<<<<<<< HEAD
+=======
+  is_start = BooleanProperty(False)
+
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
+>>>>>>> 176447a9c0af0f83e0a787125f64cee2904d43c0
 
   def set_reference_image(self, mode, seq_id, pos_id):
     # Ray: there are two modes: integrated and custom
@@ -151,12 +159,29 @@ class TrainingScreen(Screen):
     #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
     #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
+<<<<<<< HEAD
   def pause_countdown(self):
     self.anim.stop(self)
 
   def reset_countdown(self):
     Animation.cancel_all(self)
 
+=======
+  def start_stop_button(self):
+    self.is_start = not self.is_start
+
+    if(self.is_start == True):
+      self.start_training()
+      self.ids.start_button.txt = 'Stop'
+    else:
+      # self.is_start == False
+      self.ids.start_button.txt = 'Start'
+      self.stop_countdown()
+
+  def stop_countdown(self):
+    self.anim.cancel(self)
+  
+>>>>>>> 176447a9c0af0f83e0a787125f64cee2904d43c0
   def set_countdown(self):
     # Ray: set the value for the countdown timer
     print(preparation_time)
@@ -313,6 +338,10 @@ class TrainingScreen(Screen):
     # Set up countdown timer here, probably shorter than 10 seconds 
     #   (5 seconds? Use set_countdown() to set the time)
     # Start countdown and set call_back to move_on() again
+
+    # cwd is normal project working directory
+    # self.current_pose = string(int(self.current_pose))
+    # self.set_reference_image(self.mode, self.current_seq, )
     self.ids['start_button'].text = "Start"
 
   def on_countdown(self, instance, value):
