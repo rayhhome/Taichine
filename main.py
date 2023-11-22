@@ -81,7 +81,7 @@ class SelectionScreen(Screen):
         print(pose)
         menu.add_widget(pose)  
       else:
-        print('not a file')
+        print('not a file, file name is :', join('.', pose_dir, seq, '1.png'))
 
 # setting screen
 class SettingScreen(Screen):
@@ -155,9 +155,6 @@ class TrainingScreen(Screen):
     #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
     #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
-  def pause_countdown(self):
-    self.anim.stop(self)
-
   def reset_countdown(self):
     Animation.cancel_all(self)
 
@@ -166,10 +163,10 @@ class TrainingScreen(Screen):
 
     if(self.is_start == True):
       self.start_training()
-      self.ids.start_button.txt = 'Stop'
+      self.ids.start_button.text = 'Stop'
     else:
       # self.is_start == False
-      self.ids.start_button.txt = 'Start'
+      self.ids.start_button.text = 'Start'
       self.stop_countdown()
 
   def stop_countdown(self):
@@ -177,14 +174,12 @@ class TrainingScreen(Screen):
 
   def set_countdown(self):
     # Ray: set the value for the countdown timer
-    print(preparation_time)
     self.countdown = preparation_time
 
   # Ray: actually start the countdown timer 
   #      and call the callback function when countdown reaches 0
   def start_countdown(self, callback_func):
     Animation.cancel_all(self)
-    print(preparation_time)
     self.anim = Animation(countdown=0, duration=self.countdown)
     self.anim.bind(on_complete=callback_func)
     self.anim.start(self)
@@ -269,13 +264,179 @@ class TrainingScreen(Screen):
       # Head -> Torso
       Line(points=[all_x[0], all_y[0], all_x[1], all_y[1]], width=line_width)
       Ellipse(pos=(all_x[0] - head_radius, all_y[0] - head_radius), size=(head_radius * 2, head_radius * 2))
+    
+    return (all_x[8], all_y[8])
 
-  def draw_user_skeleton(self, pose_coords, pose_angles, checklist):
+  def draw_user_skeleton(self, pose_coords, ref_waist_pos, checklist):
+    if (len(checklist) < 16):
+      print("not drawing all skeletons due to player not fully in screen")
+      return
+    # Deal with input coordinates
+    all_x = pose_coords[:,0]
+    all_y = pose_coords[:,1]
+    min_x = np.min(all_x)
+    max_x = np.max(all_x)
+    min_y = np.min(all_y)
+    max_y = np.max(all_y)
+    input_width = max_x - min_x
+    input_height = max_y - min_y
+
+    # Calculate offsets and scales to fit the canvas
+    x_offset = 0
+    y_offset = 0
+    x_scale = 1
+    y_scale = 1
+
+    draw_width = self.ids.skeleton_canvas.width * 0.8
+    draw_height = self.ids.skeleton_canvas.height * 0.8
+    input_dimension = input_width / input_height
+    canvas_dimension = draw_width / draw_height
+
+    if input_dimension > canvas_dimension:
+      # Input is wider than canvas
+      x_scale = draw_width / input_width
+      y_scale = x_scale
+      y_offset = (draw_height - input_height * y_scale) / 2 + draw_height * 0.1
+      x_offset = draw_width * 0.1
+    else:
+      # Input is taller than canvas
+      y_scale = draw_height / input_height
+      x_scale = y_scale
+      x_offset = (draw_width - input_width * x_scale) / 2 + draw_width * 0.1
+      y_offset = draw_height * 0.1
+
+    # Modify coordinates to fit the canvas
+    all_x = (all_x - min_x) * x_scale + x_offset 
+    all_y = (max_y - all_y) * y_scale + y_offset
+
+    cur_user_waist_x = all_x[8]
+    cur_user_waist_y = all_y[8]
+    
+    all_x = all_x - cur_user_waist_x + ref_waist_pos[0]
+    all_y = all_y - cur_user_waist_y + ref_waist_pos[1]
+
     # Start drawing
     with self.ids.skeleton_canvas.canvas:
       # Draw the user pose
-      Color(0, 1, 0, 1) # Correct in Green
-      Color(1, 0, 0, 1) # Wrong in Red
+
+      # Go through all limbs
+      line_width = 4
+      head_radius = 40
+      
+      # Torso -> Right Arm Top
+      if checklist[1]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[1], all_y[1], all_x[2], all_y[2]], width=line_width)
+      
+      # Right Arm Top -> Right Arm Middle
+      if checklist[2]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[2], all_y[2], all_x[3], all_y[3]], width=line_width)
+      
+      # Right Arm Middle -> Right Hand
+      if checklist[3]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[3], all_y[3], all_x[4], all_y[4]], width=line_width)
+      
+      # Torso -> Left Arm Top
+      if checklist[4]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[1], all_y[1], all_x[5], all_y[5]], width=line_width)
+      
+      # Left Arm Top -> Left Arm Middle
+      if checklist[5]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red      
+      Line(points=[all_x[5], all_y[5], all_x[6], all_y[6]], width=line_width)
+      
+      # Left Arm Middle -> Left Hand
+      if checklist[6]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[6], all_y[6], all_x[7], all_y[7]], width=line_width)
+      
+      # Torso -> Waist
+      if checklist[7]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[1], all_y[1], all_x[8], all_y[8]], width=line_width)
+      
+      # Waist -> Right Leg Top
+      if checklist[8]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red      
+      Line(points=[all_x[8], all_y[8], all_x[9], all_y[9]], width=line_width)
+      
+      # Right Leg Top -> Right Leg Middle
+      if checklist[9]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[9], all_y[9], all_x[10], all_y[10]], width=line_width)
+      
+      # Right Leg Middle -> Right Foot
+      if checklist[10]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[10], all_y[10], all_x[11], all_y[11]], width=line_width)
+      
+      # Waist -> Left Leg Top
+      if checklist[11]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[8], all_y[8], all_x[12], all_y[12]], width=line_width)
+      
+      # Left Leg Top -> Left Leg Middle
+      if checklist[12]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[12], all_y[12], all_x[13], all_y[13]], width=line_width)
+      
+      # Left Leg Middle -> Left Foot
+      if checklist[13]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[13], all_y[13], all_x[14], all_y[14]], width=line_width)
+      
+      # Left Foot -> Left Toe
+      if checklist[14]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[14], all_y[14], all_x[19], all_y[19]], width=line_width)
+      
+      # Right Foot -> Right Toe
+      if checklist[15]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[11], all_y[11], all_x[22], all_y[22]], width=line_width)
+      
+      # Head -> Torso
+      if checklist[0]:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Line(points=[all_x[0], all_y[0], all_x[1], all_y[1]], width=line_width)
+      
+      
+      Ellipse(pos=(all_x[0] - head_radius, all_y[0] - head_radius), size=(head_radius * 2, head_radius * 2))
     pass
 
   def move_on(self):
@@ -293,8 +454,9 @@ class TrainingScreen(Screen):
     reference_pose_coords = joint_data[1]
     user_pose_coords = joint_data[2]
     limb_checklist = joint_data[3]
-    reference_pose_angles = joint_data[4]
-    user_pose_angles = joint_data[5]
+    # reference_pose_angles = joint_data[4]
+    # user_pose_angles = joint_data[5]
+    user_score = joint_data[4]
 
     canvas_to_draw = self.ids.skeleton_canvas
     canvas_to_draw.canvas.clear()  
@@ -309,15 +471,9 @@ class TrainingScreen(Screen):
       Color(0, 0, 0, 1) # Background in Black
       Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
 
-    # with open("SampleOutput\\1\\1_keypoints.json", 'r') as file:
-    #   local_data = json.load(file)
-    # reference_pose_coords = local_data["people"][0]["pose_keypoints_2d"]
-    # reference_pose_coords = np.array(reference_pose_coords).reshape(-1, 3)
-    # reference_pose_coords = reference_pose_coords[:, :2]
-
     # Draw poses  
-    self.draw_reference_skeleton(reference_pose_coords)
-    # self.draw_user_skeleton(user_pose_coords, user_pose_angles, limb_checklist)
+    ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
+    self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
 
     # Ray (Thoughts on the flow): 
     # Check back_process return

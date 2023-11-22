@@ -3,7 +3,7 @@ import numpy as np
 import math
 import sys
 import argparse
-# import pyttsx3
+import pyttsx3
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 
@@ -426,12 +426,12 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     # person_list = [[cur_person], [cur_person], ...]
     # cur_person = [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
     # average_similarity, [angles_in_rads]]
-    output_list.append(pose_pass)
-    output_list.append(local_keypoints)
-    output_list.append(person_list[best_person][1])
-    output_list.append(limb_checklist)
-    output_list.append(person_list[best_person][4]) # User Angles
-    output_list.append(local_quads_final) # Ref Angles
+    output_list.append(pose_pass)                   # Whether the pose Passes
+    output_list.append(local_keypoints)             # Ref Body Coordinates
+    output_list.append(person_list[best_person][1]) # User Body Coordinates
+    output_list.append(limb_checklist)              # Limb Checklist
+    # output_list.append(person_list[best_person][4]) # User Angles
+    # output_list.append(local_quads_final)           # Ref Angles
     output_list.append(person_list[best_person][5]) # Score
 
     print(output_list)
@@ -461,8 +461,8 @@ def backend_process (mode, pose_name, image_name, tolerance):
     # Get reference
     image_index = image_name.split(".png")[0]
     reference_path = "SampleOutput\\" + str(int(pose_name.split("-")[0])) + "\\" + image_index + "_keypoints.json"
-    if mode == "custom": #TODO @ Hongzhe: where are custom poses
-        reference_path = "custom_pose\\" + pose_name + "\\" + image_index + "_keypoints.json"
+    if mode == "custom":
+        reference_path = "user_poses\\" + pose_name + "\\" + image_index + "_keypoints.json"
     user_path = "user_pose_data\\user_keypoints.json"
 
     print("Comparing User data with " + reference_path, tolerance)
