@@ -93,20 +93,16 @@ class SettingScreen(Screen):
     print("Current Preparation Time:", preparation_time)
     print("Current Tolerance: ", tolerance)
     
-
 # training screen
 class TrainingScreen(Screen):
   countdown = NumericProperty(5)
   mode = StringProperty('')
   current_seq  = StringProperty('')
   current_pose = StringProperty('')
-<<<<<<< HEAD
-=======
   is_start = BooleanProperty(False)
 
   def __init__(self, **kwargs):
     super().__init__(**kwargs)
->>>>>>> 176447a9c0af0f83e0a787125f64cee2904d43c0
 
   def set_reference_image(self, mode, seq_id, pos_id):
     # Ray: there are two modes: integrated and custom
@@ -159,14 +155,12 @@ class TrainingScreen(Screen):
     #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
     #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
 
-<<<<<<< HEAD
   def pause_countdown(self):
     self.anim.stop(self)
 
   def reset_countdown(self):
     Animation.cancel_all(self)
 
-=======
   def start_stop_button(self):
     self.is_start = not self.is_start
 
@@ -180,8 +174,7 @@ class TrainingScreen(Screen):
 
   def stop_countdown(self):
     self.anim.cancel(self)
-  
->>>>>>> 176447a9c0af0f83e0a787125f64cee2904d43c0
+
   def set_countdown(self):
     # Ray: set the value for the countdown timer
     print(preparation_time)
