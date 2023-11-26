@@ -5,6 +5,7 @@ ScreenManager:
   ModeScreen:
   SelectionScreen:
   TrainingScreen:
+  ResultScreen:
   SettingScreen:
   CustomScreen:
   ConfirmScreen:
@@ -33,7 +34,7 @@ ScreenManager:
       Label:
         size: self.texture_size
         text:"Your personal Tai Chi trainer" 
-        font_name: 'fonts/SEVESBRG'
+        font_name: 'fonts/KungfooFighter.otf'
         font_size: self.height * 0.5
         italic: True
         size_hint: 1, 0.3
@@ -45,7 +46,6 @@ ScreenManager:
           rgb: 0.2, 0.2, 0.2
         Rectangle:
           size: self.size
-
       orientation: 'vertical'
       padding: 10
       spacing: 10
@@ -55,7 +55,7 @@ ScreenManager:
       Button:
         size_hint: 1, 0.25
         text_size: None, None
-        font_size: 40
+        font_size: self.height * 0.5
         text: 'Pose Selection'
         bold: True
         on_press:  
@@ -65,7 +65,7 @@ ScreenManager:
       Button:
         size_hint: 1, 0.25
         text_size: None, None
-        font_size: 40
+        font_size: self.height * 0.5
         text: 'Custom Poses Upload'
         bold: True
         on_press:
@@ -75,7 +75,7 @@ ScreenManager:
       Button:
         size_hint: 1, 0.25
         text_size: None, None
-        font_size: 40
+        font_size: self.height * 0.5
         text: 'Options'
         bold: True
         on_press:  
@@ -85,7 +85,7 @@ ScreenManager:
       Button:
         size_hint: 1, 0.25
         text_size: None, None
-        font_size: 40
+        font_size: self.height * 0.5
         text: 'Quit'
         bold: True
         on_press: App.get_running_app().stop()
@@ -115,23 +115,30 @@ ScreenManager:
       Button:
         text: 'Back'
         color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
+        size_hint: 0.15, 0.8
         font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         bold: True
         on_press: 
           root.manager.transition.direction = 'right'
           root.manager.current = 'menu'
       
   BoxLayout:
+    canvas:
+      Color:
+        rgb: 0.2, 0.2, 0.2
+      Rectangle:
+        size: self.size
     size_hint: 1, 0.8
     pos_hint: {'center_x': 0.5, 'y': 0}
     orientation: 'vertical'
+    padding: 10
+    spacing: 10
 
     Button:
       size_hint: 1, 0.5
       text_size: None, None
-      font_size: 40
+      font_size: self.height * 0.25
       text: "Yang Style 24-form Tai Chi Training"
       bold: True
       on_press: 
@@ -143,7 +150,7 @@ ScreenManager:
     Button:
       size_hint: 1, 0.5
       text_size: None, None
-      font_size: 40
+      font_size: self.height * 0.25
       text: "Uploaded Custom Poses"
       bold: True
       on_press: 
@@ -166,7 +173,7 @@ ScreenManager:
       pos_hint: {'top': 1, 'center_x': 0.5}
 
       Label:
-        text: 'Selection Your Training'
+        text: 'Training Selection'
         color: 1, 1, 1, 1
         font_name: 'fonts/SEVESBRG'      
         size: self.texture_size
@@ -177,9 +184,9 @@ ScreenManager:
       Button:
         text: 'Back'
         color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
+        size_hint: 0.15, 0.8
         font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         bold: True
         on_press: 
           root.manager.transition.direction = 'right'
@@ -204,8 +211,9 @@ ScreenManager:
             rgb: 0.2, 0.2, 0.2
           Rectangle:
             size: self.size
-        cols: 1
         spacing: 10
+        padding: 10
+        cols: 1
         size_hint: 1, None
         pos_hint: {'bottom': 0, 'center_x': 0.5}
 
@@ -228,7 +236,7 @@ ScreenManager:
         color: 1, 1, 1, 1
         font_name: 'fonts/SEVESBRG'      
         size: self.texture_size
-        font_size: self.height * 0.4
+        font_size: self.height * 0.35
         pos_hint: {'center_y': 0.3, 'center_x': 0.5}
         bold: True
 
@@ -239,7 +247,6 @@ ScreenManager:
         font_size: self.height * 0.35
         pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         on_press: 
-          root.reset_countdown()
           root.manager.transition.direction = 'right'
           root.manager.current = 'selection'
 
@@ -252,7 +259,12 @@ ScreenManager:
         pos_hint: {'center_y': 0.5, 'center_x': 0.9}
         on_press: root.start_stop_button()
 
-    GridLayout:      
+    GridLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size
       cols: 3
       size_hint: 1, 0.8
       pos_hint: {'y': 0}
@@ -280,6 +292,83 @@ ScreenManager:
         allow_stretch: True
         keep_ration: True
                 
+<ResultScreen>:
+  name: 'result'
+  FloatLayout:
+    canvas:
+      Color:
+        rgb: 0.6, 0.8, 0.8
+      Rectangle:
+        size: self.size
+    
+    FloatLayout:
+      size_hint: 1, 0.2
+      pos_hint: {'top': 1, 'center_x': 0.5}
+
+      Label:
+        text: 'Congratulations!'
+        color: 1, 1, 1, 1
+        font_name: 'fonts/SEVESBRG'      
+        size: self.texture_size
+        font_size: self.height * 0.5
+        pos_hint: {'center_y': 0.3, 'center_x': 0.5}
+        bold: True
+
+      Label:
+        text: 'Press Back to Go back to Mode Selection'
+        color: 1, 1, 1, 1
+        font_name: 'fonts/KungfooFighter.otf'     
+        size: self.texture_size
+        font_size: self.height * 0.2
+        pos_hint: {'center_y': 0.7, 'center_x': 0.5}
+
+      Button:
+        text: 'Back'
+        color: 1, 1, 1, 1
+        size_hint: 0.15, 0.8
+        font_size: self.height * 0.35
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
+        on_press: 
+          root.manager.transition.direction = 'right'
+          root.manager.current = 'mode'
+  
+    BoxLayout:
+      canvas:
+        Color:
+          rgb: 0.8, 0.8, 0.8
+        Rectangle:
+          size: self.size
+      orientation: 'vertical'
+      size_hint: 1, 0.8
+      pos_hint: {'y': 0, 'center_x': 0.5}
+      padding: 40
+      spacing: 20
+
+      Label:
+        id: average_score
+        color: 0, 0, 0, 1
+        font_name: 'fonts/Aller' 
+        size: self.texture_size
+        font_size: self.height * 0.5
+        bold: True
+
+      Label:
+        id: total_time
+        color: 0, 0, 0, 1
+        font_name: 'fonts/Aller'
+        size: self.texture_size
+        font_size: self.height * 0.5
+        bold: True
+      
+      Label:
+        id: tips_label
+        color: 0, 0, 0, 1
+        font_name: 'fonts/Aller'
+        text_size: self.size
+        size: self.texture_size
+        font_size: self.height * 0.3
+        bold: True
+
 <SettingScreen>:
   name: 'setting'
   FloatLayout:
@@ -305,9 +394,9 @@ ScreenManager:
       Button:
         text: 'Back'
         color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
+        size_hint: 0.15, 0.8
         font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         bold: True
         on_press: 
           root.set_value()
@@ -321,13 +410,14 @@ ScreenManager:
         Rectangle:
           size: self.size
       cols: 2
-      rows: 2
+      rows: 3
       size_hint: 1, 0.8
       pos_hint: {'center_x': 0.5, 'bottom': 0}
       padding: 50
 
       Label:
-        text: 'Tolerance'
+        id: tolerance_label
+        text: 'Tolerance: ' + str(int(tolerance_slider.value)) + ' degrees'
         color: 0, 0, 0, 1
         size_hint: 0.8, 0.2
         font_size: self.width * 0.1
@@ -342,7 +432,8 @@ ScreenManager:
         orientation: 'horizontal'
 
       Label:
-        text: 'Preparation Time'
+        id: preparation_label
+        text: 'Preparation Time: ' + str(int(preparation_slider.value)) + 's'
         color: 0, 0, 0, 1
         size_hint: 0.8, 0.2
         font_size: self.width * 0.1
@@ -351,8 +442,24 @@ ScreenManager:
       Slider:
         id: preparation_slider
         min: 1
+        max: 15
+        value: 10
+        step: 1
+        orientation: 'horizontal'
+
+      Label:
+        id: move_on_label
+        text: 'Move-on Time: ' + str(int(move_on_slider.value)) + 's'
+        color: 0, 0, 0, 1
+        size_hint: 0.8, 0.2
+        font_size: self.width * 0.1
+        width: 80
+
+      Slider:
+        id: move_on_slider
+        min: 1
         max: 10
-        value: 5
+        value: 3
         step: 1
         orientation: 'horizontal'
 
@@ -370,7 +477,7 @@ ScreenManager:
       pos_hint: {'y': 0.8, 'center_x': 0.5}
 
       Label:
-        text: 'Upload'
+        text: 'Upload your pose'
         color: 1, 1, 1, 1
         font_name: 'fonts/SEVESBRG'      
         size: self.texture_size
@@ -381,9 +488,9 @@ ScreenManager:
       Button:
         text: 'Back'
         color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
+        size_hint: 0.15, 0.8
         font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         bold: True
         on_press: 
           root.manager.transition.direction = 'right'
@@ -468,9 +575,9 @@ ScreenManager:
       Button:
         text: 'Back'
         color: 1, 1, 1, 1
-        size_hint: 0.15, 0.25
+        size_hint: 0.15, 0.8
         font_size: self.height * 0.35
-        pos_hint: {'center_y': 0.8, 'center_x': 0.1}
+        pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         bold: True
         on_press: 
           root.manager.transition.direction = 'right'
@@ -622,14 +729,13 @@ ScreenManager:
 <PoseItem>:
   canvas:
     Color:
-      rgb: 0.2, 0.2, 0.2
+      rgb: 0.3, 0.3, 0.3, 1
     Rectangle:
+      pos: self.pos
       size: self.size
   orientation: 'horizontal'
-  padding: 10
-  spacing: 10  
   size_hint: 1, None
-  height: 80   
+  height: 150
   on_press: 
     current_screen = root.parent.parent.parent.parent
     current_screen.manager.get_screen('training').mode = current_screen.mode
@@ -637,10 +743,16 @@ ScreenManager:
     current_screen.manager.transition.direction = 'left'
     current_screen.manager.current = 'training'
     current_screen.manager.get_screen('training').set_preparation_countdown()
+    current_screen.manager.get_screen('training').ids['start_button'].text = 'Start'
+    current_screen.manager.get_screen('training').ids['score_label'].text = 'Press Start to Begin'
     
   Image:
     size_hint: 0.15, 1
     source: root.image
+
   Label:
     size_hint: 0.85, 1
     text: root.label
+    font_size: self.height * 0.5
+    bold: True
+    font_name: 'fonts/Aller'

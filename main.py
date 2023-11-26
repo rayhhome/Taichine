@@ -6,7 +6,7 @@ kivy.require('2.2.1')
 from kivy.app import App
 from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.uix.label import Label
@@ -21,26 +21,39 @@ from kivy.graphics import Color, Line, Rectangle, Ellipse
 
 from plyer import filechooser
 import os
-from os import system, getcwd, listdir, makedirs
+from os import system, getcwd, listdir, remove
 from os.path import join, isfile, exists
+from math import ceil
+from random import choice
 
 import numpy as np
 
 import json
 
-tolerance = 5
-preparation_time = 5
-move_on_time = 3
-
 Window.minimum_width = 800
 Window.minimum_height = 600
 Window.fullscreen = 'auto'
 
-# global variable
+# global variables
 tolerance = 5
-preparation_time = 5
+preparation_time = 15
+move_on_time = 5
 
 path_selected = None
+
+tips = [
+  'Tweak the tolerance slider in the setting screen to adjust the difficulty according to your condition.',
+  'Tweak the preparation time slider in the setting screen to adjust the preparation time when the training starts.',
+  'Tweak the move-on time slider in the setting screen to adjust the time interval between each pose.',
+  'Make sure all your body parts are in the camera view to get optimal evaluation results.',
+  'Upload your own pose sequences in the custom screen to train with your own poses.',
+  'High score is not the goal. Please train with your own pace.',
+  'Tai Chi is a long-term training. Please keep training and you will see the improvement.',
+  'Please consult your doctor before training if you have any health concerns.',
+  'Tai Chi is mostly for adjusting your breathing pace and enhancing cardiorespiratory endurance.',
+  'Balance is the goal. Try to keep your balance as you train.',
+  'Breath in when you move your arms up, breath out when you move your arms down.'
+]
 
 # menu screen
 class MenuScreen(Screen):
@@ -77,7 +90,7 @@ class SelectionScreen(Screen):
       else:
         print('not a file, file name should be :', join('.', pose_dir, seq, '1.png'))
 
-# pose item
+# pose item (used in selection screen)
 class PoseItem(ButtonBehavior, BoxLayout):
   id = StringProperty('')
   image = StringProperty('')
@@ -85,16 +98,20 @@ class PoseItem(ButtonBehavior, BoxLayout):
   mode = StringProperty('')
   pass
 
-# setting screen
+# setting screen 
 class SettingScreen(Screen):
+
   def set_value(self):
     global preparation_time
+    global move_on_time
     global tolerance
     preparation_time = self.ids.preparation_slider.value
+    move_on_time = self.ids.move_on_slider.value
     tolerance = self.ids.tolerance_slider.value
     print("Current Preparation Time:", preparation_time)
+    print("Current Move On Time: ", move_on_time)
     print("Current Tolerance: ", tolerance)
-    
+
 # training screen
 class TrainingScreen(Screen):
   countdown = NumericProperty(5)
@@ -105,6 +122,10 @@ class TrainingScreen(Screen):
 
   def __init__(self, **kwargs):
     super().__init__(**kwargs)
+    self.score_acc = 0
+    self.attempt_acc = 0
+    global preparation_time
+    self.time_acc = preparation_time
 
   def set_reference_image(self, mode, seq_id, pos_id):
     # Ray: there are two modes: integrated and custom
@@ -152,18 +173,17 @@ class TrainingScreen(Screen):
 
     self.start_countdown(finish_callback)
 
-  def reset_countdown(self):
-    Animation.cancel_all(self)
-
   def start_stop_button(self):
     self.is_start = not self.is_start
 
     if(self.is_start == True):
-      self.ids['score_lable'].text = "Follow the reference..."
+      self.ids['score_label'].text = "Follow the reference..."
       self.start_training()
       self.ids.start_button.text = 'Stop'
     else:
       # self.is_start == False
+      self.ids['score_label'].text = "Press Start to Continue"
+      self.set_preparation_countdown()
       self.ids.start_button.text = 'Start'
       self.stop_countdown()
 
@@ -441,6 +461,10 @@ class TrainingScreen(Screen):
       Ellipse(pos=(all_x[0] - head_radius, all_y[0] - head_radius), size=(head_radius * 2, head_radius * 2))
     pass
 
+  def remove_user_pic(self):
+    if (os.path.exists(join('.', 'user_input', 'user.png'))):
+      remove(join('.', 'user_input', 'user.png'))
+
   def move_on(self):
     print("move_on() called")
     global tolerance
@@ -448,33 +472,39 @@ class TrainingScreen(Screen):
     
     if joint_data == None:
       print("joint_data is None")
-      return
+      # return
 
     # Drawing pipeline
     # Extract all joint data
-    pose_pass = joint_data[0]
-    reference_pose_coords = joint_data[1]
-    user_pose_coords = joint_data[2]
-    limb_checklist = joint_data[3]
-    user_score = joint_data[4]
+    # pose_pass = joint_data[0]
+    # reference_pose_coords = joint_data[1]
+    # user_pose_coords = joint_data[2]
+    # limb_checklist = joint_data[3]
+    # user_score = joint_data[4]
 
-    # Clear skeleton canvas
-    canvas_to_draw = self.ids.skeleton_canvas
-    canvas_to_draw.canvas.clear()  
+    # # Clear skeleton canvas
+    # canvas_to_draw = self.ids.skeleton_canvas
+    # canvas_to_draw.canvas.clear()  
 
-    # Show Signal
-    with canvas_to_draw.canvas:
-      if pose_pass:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
-      Color(0, 0, 0, 1) # Background in Black
-      Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
+    # # Show Signal
+    # with canvas_to_draw.canvas:
+    #   if pose_pass:
+    #     Color(0, 1, 0, 1) # Correct in Green
+    #   else:
+    #     Color(1, 0, 0, 1) # Wrong in Red
+    #   Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
+    #   Color(0, 0, 0, 1) # Background in Black
+    #   Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
 
-    # Draw poses  
-    ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
-    self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
+    # # Draw poses  
+    # ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
+    # self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
+
+    user_score = 95
+
+    # accumulate score and attempt
+    self.score_acc += user_score
+    self.attempt_acc += 1
 
     # Check back_process return
     if user_score >= 90:
@@ -489,8 +519,13 @@ class TrainingScreen(Screen):
         self.set_move_on_countdown()
         self.start_training()
       else:
-        # Display congratulations (Probably need a result screen, TBD)
-        self.ids['score_label'].text = f'Congratulations! You have completed the pose sequence!'
+        # Training Over! Switch to result screen
+        self.is_start = False
+        self.remove_user_pic()
+        self.manager.get_screen('result').ids['average_score'].text = f'Your Final Score: {ceil(self.score_acc / self.attempt_acc)}'
+        self.manager.get_screen('result').ids['total_time'].text = f'Total Training Time: {ceil(self.time_acc)}s'
+        self.manager.get_screen('result').ids['tips_label'].text = f'Tip: {choice(tips)}'
+        self.manager.current = 'result'
     else:
       # Switch reference image to next pose using set_reference_image()
       # Display new reference and user skelectons with correct body part
@@ -500,6 +535,10 @@ class TrainingScreen(Screen):
       # Set up countdown timer here with move on interval
       self.set_move_on_countdown()
       self.start_training()
+    
+    # accumulate total training time
+    global move_on_time
+    self.time_acc += move_on_time
 
   def on_countdown(self, instance, value):
     # Ray: this is for animation of the start button text
@@ -510,6 +549,7 @@ class TrainingScreen(Screen):
     start_button = self.ids['start_button']
     start_button.text = str(round(value, 1))
 
+# trimmed camera, used in training screen
 class TrimmedCamera(Camera):
   # https://stackoverflow.com/questions/67967041/how-can-i-use-kivy-to-zoom-in-or-zoom-out-live-camera
   region_x = NumericProperty(200)
@@ -524,8 +564,13 @@ class TrimmedCamera(Camera):
     self.texture_size = list(texture.size)
     self.canvas.ask_update()
 
-class CustomScreen(Screen):
+# result screen
+class ResultScreen(Screen):
+  pass
 
+# custom screen
+class CustomScreen(Screen):
+  
   def __init__(self, **kwargs):
     self.curr_dir = curr_dir = getcwd()
     self.poses_folder = join(curr_dir, "user_poses")
@@ -546,7 +591,8 @@ class CustomScreen(Screen):
     # print("selection = ", selection)
     globals()['path_selected'] = selection
     # print("globals()['path_selected']: ", globals()["path_selected"])
-    
+
+# pose sequence item, used in custom screen
 class PoseSequenceItem(Widget):
 
   # def exit_button(self, posesList):
@@ -562,10 +608,10 @@ class PoseSequenceItem(Widget):
   #   #     print(children)
   pass
 
+# confirm screen
 class ConfirmScreen(Screen):
 
   def __init__(self, **kwargs):
-
     super(ConfirmScreen, self).__init__(**kwargs)
     self.filename=""
     self.curr_dir = getcwd()
@@ -712,11 +758,13 @@ class ConfirmScreen(Screen):
 
     # self.on_enter = on_enter()
 
+# swap two elements in a list
 def swap(list, indexA, indexB):
   temp = list[indexA]
   list[indexA] = list[indexB]
   list[indexB] = temp
 
+# get the file type and name from the file source
 def getFileTypeAndName(fileSrc):
   print("fileSrc", fileSrc)
   src_split_list = fileSrc.split('\\')
@@ -730,6 +778,7 @@ def getFileTypeAndName(fileSrc):
 
   return filename, filetype
 
+# actual app
 class TaichineApp(App):
   pass 
 
