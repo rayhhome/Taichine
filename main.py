@@ -476,31 +476,29 @@ class TrainingScreen(Screen):
 
     # Drawing pipeline
     # Extract all joint data
-    # pose_pass = joint_data[0]
-    # reference_pose_coords = joint_data[1]
-    # user_pose_coords = joint_data[2]
-    # limb_checklist = joint_data[3]
-    # user_score = joint_data[4]
+    pose_pass = joint_data[0]
+    reference_pose_coords = joint_data[1]
+    user_pose_coords = joint_data[2]
+    limb_checklist = joint_data[3]
+    user_score = joint_data[4]
 
-    # # Clear skeleton canvas
-    # canvas_to_draw = self.ids.skeleton_canvas
-    # canvas_to_draw.canvas.clear()  
+    # Clear skeleton canvas
+    canvas_to_draw = self.ids.skeleton_canvas
+    canvas_to_draw.canvas.clear()  
 
-    # # Show Signal
-    # with canvas_to_draw.canvas:
-    #   if pose_pass:
-    #     Color(0, 1, 0, 1) # Correct in Green
-    #   else:
-    #     Color(1, 0, 0, 1) # Wrong in Red
-    #   Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
-    #   Color(0, 0, 0, 1) # Background in Black
-    #   Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
+    # Show Signal
+    with canvas_to_draw.canvas:
+      if pose_pass:
+        Color(0, 1, 0, 1) # Correct in Green
+      else:
+        Color(1, 0, 0, 1) # Wrong in Red
+      Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
+      Color(0, 0, 0, 1) # Background in Black
+      Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
 
-    # # Draw poses  
-    # ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
-    # self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
-
-    user_score = 95
+    # Draw poses  
+    ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
+    self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
 
     # accumulate score and attempt
     self.score_acc += user_score
