@@ -22,7 +22,7 @@ from kivy.graphics import Color, Line, Rectangle, Ellipse
 from plyer import filechooser
 import os
 from os import system, getcwd, listdir, makedirs
-from os.path import join, isfile, split
+from os.path import join, isfile, exists
 
 import numpy as np
 
@@ -30,6 +30,7 @@ import json
 
 tolerance = 5
 preparation_time = 5
+move_on_time = 3
 
 Window.minimum_width = 800
 Window.minimum_height = 600
@@ -40,13 +41,6 @@ tolerance = 5
 preparation_time = 5
 
 path_selected = None
-# pose item
-class PoseItem(ButtonBehavior, BoxLayout):
-  id = StringProperty('')
-  image = StringProperty('')
-  label = StringProperty('')
-  mode = StringProperty('')
-  pass
 
 # menu screen
 class MenuScreen(Screen):
@@ -81,7 +75,15 @@ class SelectionScreen(Screen):
         print(pose)
         menu.add_widget(pose)  
       else:
-        print('not a file, file name is :', join('.', pose_dir, seq, '1.png'))
+        print('not a file, file name should be :', join('.', pose_dir, seq, '1.png'))
+
+# pose item
+class PoseItem(ButtonBehavior, BoxLayout):
+  id = StringProperty('')
+  image = StringProperty('')
+  label = StringProperty('')
+  mode = StringProperty('')
+  pass
 
 # setting screen
 class SettingScreen(Screen):
@@ -120,9 +122,13 @@ class TrainingScreen(Screen):
       self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id + '.png')
     elif mode == 'custom':
       self.ids['reference_image'].source = join('.', 'user_poses', seq_id, pos_id + '.png')
-    self.ids['reference_image'].reload()
-    self.current_seq  = seq_id
-    self.current_pose = pos_id
+    if exists(self.ids['reference_image'].source):
+      self.ids['reference_image'].reload()
+      self.current_seq  = seq_id
+      self.current_pose = pos_id
+      return True
+    else:
+      return False
 
   def start_training(self):
     '''
@@ -146,15 +152,6 @@ class TrainingScreen(Screen):
 
     self.start_countdown(finish_callback)
 
-    # Start backend processing
-    # DONE @ Ray: Need a parameter to know:
-    # 1. Whether it is user pose or default pose
-    #   Ray: to access the pose mode, use self.mode, which can be either "integrated" or "custom"
-    # 2. The pose name to find the coordinates
-    #   Ray: to access the pose name, use:
-    #     a. self.current_seq , which can be "01 - Commence form", "02 - Open and close", "03 - Single whip"...
-    #     b. self.current_pose, which can be "1.png", "2.png", "3.png"...
-
   def reset_countdown(self):
     Animation.cancel_all(self)
 
@@ -162,6 +159,7 @@ class TrainingScreen(Screen):
     self.is_start = not self.is_start
 
     if(self.is_start == True):
+      self.ids['score_lable'].text = "Follow the reference..."
       self.start_training()
       self.ids.start_button.text = 'Stop'
     else:
@@ -172,9 +170,13 @@ class TrainingScreen(Screen):
   def stop_countdown(self):
     self.anim.cancel(self)
 
-  def set_countdown(self):
-    # Ray: set the value for the countdown timer
+  def set_preparation_countdown(self):
+    # Ray: set the value for the countdown timer for preparation phase
     self.countdown = preparation_time
+
+  def set_move_on_countdown(self):
+    # Ray: set the value for the countdown timer for move on phase
+    self.countdown = move_on_time
 
   # Ray: actually start the countdown timer 
   #      and call the callback function when countdown reaches 0
@@ -448,16 +450,15 @@ class TrainingScreen(Screen):
       print("joint_data is None")
       return
 
-    # # Drawing pipeline
-    # # Extract all joint data
+    # Drawing pipeline
+    # Extract all joint data
     pose_pass = joint_data[0]
     reference_pose_coords = joint_data[1]
     user_pose_coords = joint_data[2]
     limb_checklist = joint_data[3]
-    # reference_pose_angles = joint_data[4]
-    # user_pose_angles = joint_data[5]
     user_score = joint_data[4]
 
+    # Clear skeleton canvas
     canvas_to_draw = self.ids.skeleton_canvas
     canvas_to_draw.canvas.clear()  
 
@@ -475,23 +476,30 @@ class TrainingScreen(Screen):
     ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
     self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
 
-    # Ray (Thoughts on the flow): 
     # Check back_process return
-    # -- IF FULL (WITH POSE SEQUENCE) --
-    #   If last pose:
-    #     Display congratulations (Probably need a result screen, TBD)
-    #   Else:
-    #     Switch reference image to next pose using set_reference_image()
-    #     Display new reference and user skelectons with correct body part
-    #     Verbal instruction reading "great job" and the next pose name
-    # Set up countdown timer here, probably shorter than 10 seconds 
-    #   (5 seconds? Use set_countdown() to set the time)
-    # Start countdown and set call_back to move_on() again
+    if user_score >= 90:
+      self.current_pose = str(int(self.current_pose) + 1)
+      next_pose_exists = self.set_reference_image(self.mode, self.current_seq, self.current_pose)
+      if next_pose_exists:
+        # Display new reference and user skelectons with correct body part
+        # Verbal instruction reading "great job"
+        self.ids['score_label'].text = f'Score: {user_score}! Keep it up!'
 
-    # cwd is normal project working directory
-    # self.current_pose = string(int(self.current_pose))
-    # self.set_reference_image(self.mode, self.current_seq, )
-    self.ids['start_button'].text = "Start"
+        # Set up countdown timer here with move on interval
+        self.set_move_on_countdown()
+        self.start_training()
+      else:
+        # Display congratulations (Probably need a result screen, TBD)
+        self.ids['score_label'].text = f'Congratulations! You have completed the pose sequence!'
+    else:
+      # Switch reference image to next pose using set_reference_image()
+      # Display new reference and user skelectons with correct body part
+      # Verbal instruction reading "great job"
+      self.ids['score_label'].text = f'Score: {user_score}. You can do it!'
+
+      # Set up countdown timer here with move on interval
+      self.set_move_on_countdown()
+      self.start_training()
 
   def on_countdown(self, instance, value):
     # Ray: this is for animation of the start button text
