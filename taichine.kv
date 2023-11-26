@@ -247,6 +247,7 @@ ScreenManager:
         font_size: self.height * 0.35
         pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         on_press: 
+          root.remove_user_pic()
           root.manager.transition.direction = 'right'
           root.manager.current = 'selection'
 
@@ -366,7 +367,7 @@ ScreenManager:
         font_name: 'fonts/Aller'
         text_size: self.size
         size: self.texture_size
-        font_size: self.height * 0.3
+        font_size: self.height * 0.2
         bold: True
 
 <SettingScreen>:
@@ -441,9 +442,9 @@ ScreenManager:
 
       Slider:
         id: preparation_slider
-        min: 1
-        max: 15
-        value: 10
+        min: 5
+        max: 20
+        value: 15
         step: 1
         orientation: 'horizontal'
 
@@ -458,8 +459,8 @@ ScreenManager:
       Slider:
         id: move_on_slider
         min: 1
-        max: 10
-        value: 3
+        max: 15
+        value: 5
         step: 1
         orientation: 'horizontal'
 
