@@ -65,10 +65,22 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     # that is the most similar, given that the user is attempting the posture
     # Extract the keypoints from the JSON data
 
+    local_keypoints = local_data["people"][0]["pose_keypoints_2d"]
+    local_keypoints = np.array(local_keypoints).reshape(-1, 3)
+    local_keypoints = local_keypoints[:, :2]
+
+    local_lhand_keypoints = local_data["people"][0]["hand_left_keypoints_2d"]
+    local_rhand_keypoints = local_data["people"][0]["hand_right_keypoints_2d"]
+    local_lhand_keypoints = np.array(local_lhand_keypoints).reshape(-1, 3)
+    local_rhand_keypoints = np.array(local_rhand_keypoints).reshape(-1, 3)
+    local_lhand_keypoints = local_lhand_keypoints[:, :2]
+    local_rhand_keypoints = local_rhand_keypoints[:, :2]
+
+
     # Case: No Person in Frame
     if not input_data["people"]:
         print("Error: No person found")
-        # return
+        return [False, local_keypoints, np.array([0]), [False], 0, ['Whole Body']]
  
     best_score = 0
     best_person = 0
@@ -83,15 +95,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         # Extract the keypoints from the JSON data
         input_keypoints = input_data["people"][i]["pose_keypoints_2d"]
 
-        local_keypoints = local_data["people"][0]["pose_keypoints_2d"]
-
         lhand_keypoints = input_data["people"][i]["hand_left_keypoints_2d"]
 
         rhand_keypoints = input_data["people"][i]["hand_right_keypoints_2d"]
-
-        local_lhand_keypoints = local_data["people"][0]["hand_left_keypoints_2d"]
-
-        local_rhand_keypoints = local_data["people"][0]["hand_right_keypoints_2d"]
 
         # Ensure the two lists have the same length
         # if len(input_keypoints) != len(local_keypoints):
@@ -126,18 +132,13 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         # TODO: Say something about missing bodypart: Include your body in frame
             # Integration TODO: return the list if non-empty? TBD
 
-        local_keypoints = np.array(local_keypoints).reshape(-1, 3)
         lhand_keypoints = np.array(lhand_keypoints).reshape(-1, 3)
         rhand_keypoints = np.array(rhand_keypoints).reshape(-1, 3)
-        local_lhand_keypoints = np.array(local_lhand_keypoints).reshape(-1, 3)
-        local_rhand_keypoints = np.array(local_rhand_keypoints).reshape(-1, 3)
-
+ 
         # Remove confidence intervals prior to comparison
-        local_keypoints = local_keypoints[:, :2]
         lhand_keypoints = lhand_keypoints[:, :2]
         rhand_keypoints = rhand_keypoints[:, :2]
-        local_lhand_keypoints = local_lhand_keypoints[:, :2]
-        local_rhand_keypoints = local_rhand_keypoints[:, :2]
+
 
 
         # Defining all user inputs
