@@ -513,6 +513,8 @@ class TrainingScreen(Screen):
     self.score_acc += user_score
     self.attempt_acc += 1
 
+    print("Skeleton drawn, Score accumulated")
+
     # Check back_process return
     if user_score >= 90:
       self.current_pose = str(int(self.current_pose) + 1)
@@ -525,6 +527,7 @@ class TrainingScreen(Screen):
         # Set up countdown timer here with move on interval
         self.set_move_on_countdown()
         self.start_training()
+        print("Next pose exists")
       else:
         # Training Over! Switch to result screen
         self.is_start = False
@@ -533,6 +536,7 @@ class TrainingScreen(Screen):
         self.manager.get_screen('result').ids['total_time'].text = f'Total Training Time: {ceil(self.time_acc)}s'
         self.manager.get_screen('result').ids['tips_label'].text = f'Tip: {choice(tips)}'
         self.manager.current = 'result'
+        print("Next pose does not exist")
     else:
       # Switch reference image to next pose using set_reference_image()
       # Display new reference and user skelectons with correct body part
@@ -542,10 +546,12 @@ class TrainingScreen(Screen):
       # Set up countdown timer here with move on interval
       self.set_move_on_countdown()
       self.start_training()
+      print("Score too low")
     
     # accumulate total training time
     global move_on_time
     self.time_acc += move_on_time
+    print("time accumulated")
 
   def on_countdown(self, instance, value):
     # Ray: this is for animation of the start button text
