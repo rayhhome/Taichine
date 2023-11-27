@@ -488,7 +488,7 @@ class TrainingScreen(Screen):
     reference_pose_coords = joint_data[1]
     user_pose_coords = joint_data[2]
     limb_checklist = joint_data[3]
-    user_score = joint_data[4]
+    user_score = ceil(joint_data[4])
     missing_joints = joint_data[5]
 
     # Clear skeleton canvas

@@ -414,6 +414,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         print("Great, you made it! You mastered the pose.")
         pyttsx3.speak(message)
         pose_pass = True
+    elif person_list[best_person][2]:
+        message = "Adjust your posture to include full body in frame"
+        pyttsx3.speak(message)
     else:
         # worst_angle = round(max(angle_differences, key=abs))
         # message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
