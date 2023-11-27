@@ -289,8 +289,8 @@ class TrainingScreen(Screen):
     
     return (all_x[8], all_y[8])
 
-  def draw_user_skeleton(self, pose_coords, ref_waist_pos, checklist):
-    if (len(checklist) < 16):
+  def draw_user_skeleton(self, pose_coords, ref_waist_pos, checklist, missing_joints):
+    if (len(missing_joints) > 0):
       print("not drawing all skeletons due to player not fully in screen")
       return
     # Deal with input coordinates
@@ -470,10 +470,18 @@ class TrainingScreen(Screen):
     global tolerance
     joint_data = backend_process(self.mode, self.current_seq, self.current_pose, tolerance)
     
-    if joint_data == None:
-      print("joint_data is None")
-      # return
+    if len(joint_data) == 1:
+      # Error! Switch to result screen
+      print("Error encountered")
+      self.is_start = False
+      self.remove_user_pic()
+      self.manager.get_screen('result').ids['average_score'].text = joint_data[0]
+      self.manager.get_screen('result').ids['total_time'].text = ''
+      self.manager.get_screen('result').ids['tips_label'].text = ''
+      self.manager.current = 'result'
+      return
 
+      # return
     # Drawing pipeline
     # Extract all joint data
     pose_pass = joint_data[0]
@@ -481,6 +489,7 @@ class TrainingScreen(Screen):
     user_pose_coords = joint_data[2]
     limb_checklist = joint_data[3]
     user_score = joint_data[4]
+    missing_joints = joint_data[5]
 
     # Clear skeleton canvas
     canvas_to_draw = self.ids.skeleton_canvas
@@ -498,7 +507,7 @@ class TrainingScreen(Screen):
 
     # Draw poses  
     ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
-    self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist)
+    self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist, missing_joints)
 
     # accumulate score and attempt
     self.score_acc += user_score

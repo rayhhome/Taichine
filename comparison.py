@@ -41,24 +41,21 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     
     print(f"Current Tolerance Angle: {tolerance}")
     if user_pose_path is None or ref_pose_path is None:
-        print("Error: Please provide paths for user_pose and ref_pose.")
-        return
+        return ["Error: Please provide paths for user_pose and ref_pose."]
 
     try:
         # Load and parse the JSON files
         with open(user_pose_path, 'r') as file:
             input_data = json.load(file)
     except FileNotFoundError:
-        print("Error: user JSON files not found.")
-        return
+        return ["Error: user JSON files not found."]
 
     try:
         with open(ref_pose_path, 'r') as file:
             local_data = json.load(file)
 
     except FileNotFoundError:
-        print("Error: reference JSON files not found.")
-        return
+        return ["Error: reference JSON files not found."]
 
     # Multiple People Implementation
     # Method: No matter how incomplete your posture is, I always just evaluate the one
