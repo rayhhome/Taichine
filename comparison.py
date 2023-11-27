@@ -433,6 +433,8 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     # output_list.append(person_list[best_person][4]) # User Angles
     # output_list.append(local_quads_final)           # Ref Angles
     output_list.append(person_list[best_person][5]) # Score
+    output_list.append(person_list[best_person][2]) # Missing Joint List
+
 
     print(output_list)
     return output_list
