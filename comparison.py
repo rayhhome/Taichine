@@ -4,14 +4,30 @@ import math
 import sys
 import argparse
 import pyttsx3
+import os
+import pygame
+import time
+import logging
 # sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 
+logging.getLogger("comtypes").setLevel(logging.WARNING)
+logging.getLogger("comtypes").setLevel(logging.ERROR)
 # Globals
 # Define a fixed vertical vector pointing straight up
 vertical_vector = np.array([0, 1])
 horizontal_vector = np.array([1, 0])
+# engine = pyttsx3.init()
 
+
+def play_wav_file(file_path):
+    pygame.init()
+    pygame.mixer.init()
+
+    sound = pygame.mixer.Sound(file_path)
+    sound.play()
+    time.sleep(3)
+    # return
 
 # Expect to receive a tolerance level from front end
 # Return formatting:
@@ -24,6 +40,11 @@ horizontal_vector = np.array([1, 0])
 #   List ReferenceAngles
 # }
 def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
+
+    path = './voice'
+    if not os.path.exists(path):
+        os.mkdir(path)
+    engine = pyttsx3.init()
 
     output_list = []
     pose_pass = False
@@ -292,12 +313,23 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             cur_person.append(["right"])
             message = "Check your Right Hand Posture!"
             print(message)
-            pyttsx3.speak(message)
+            # engine.say(message)
+            # engine.runAndWait()     
+            out_path = f'test0.mp3'
+            engine.save_to_file(message, 'test0.mp3')
+            engine.runAndWait()
+            play_wav_file(out_path)
+
         elif localisfist_left != userisfist_left:
             cur_person.append(["left"])
             message = "Check your Left Hand Posture!"
             print(message)
-            pyttsx3.speak(message)
+            # engine.say(message)
+            # engine.runAndWait()
+            out_path = f'test1.mp3'
+            engine.save_to_file(message, 'test1.mp3')
+            engine.runAndWait()
+            play_wav_file(out_path)
         else:
             cur_person.append([])
 ################## End of Hand Comparison #########################
@@ -378,7 +410,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     # (head_torsol, torso_waistl), (head_torso, torso_waist)
     # [0] and [7] compare the rads -> tolerance, give errors if those are wrong
 
-    word_choice = [["inwards", "outwards"], ["upwards", "downwards"]]
+    word_choice = [["outwards", "inwards"], ["upwards", "downwards"]]
     angle_differences = [(a - b + 180) % 360 - 180 for a, b in zip(person_list[best_person][4], local_quads_final)]
     # print(angle_differences)
     # for rad in best_radians:
@@ -412,17 +444,33 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     if not error_namelist: # All poses pass == Error list empty
         message = "Great, you made it!"
         print("Great, you made it! You mastered the pose.")
-        pyttsx3.speak(message)
+
+        out_path = f'test2.mp3'
+        engine.save_to_file(message, 'test2.mp3')
+        engine.runAndWait()
+        play_wav_file(out_path)
+        # engine.say(message)
+        # engine.runAndWait()     
         pose_pass = True
     elif person_list[best_person][2]:
         message = "Adjust your posture to include full body in frame"
-        pyttsx3.speak(message)
+        out_path = f'test3.mp3'
+        engine.save_to_file(message, 'test3.mp3')
+        engine.runAndWait()
+        play_wav_file(out_path)
+        # engine.say(message)
+        # engine.runAndWait()
     else:
         # worst_angle = round(max(angle_differences, key=abs))
         # message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
         print(sentence_list)
         message = sentence_list[-1]
-        pyttsx3.speak(message)
+        out_path = f'test4.mp3'
+        engine.save_to_file(message, 'test4.mp3')
+        engine.runAndWait()
+        play_wav_file(out_path)
+        # engine.say(message)
+        # engine.runAndWait()
 
     # person_list = [[cur_person], [cur_person], ...]
     # cur_person = [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
@@ -436,7 +484,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     output_list.append(person_list[best_person][5]) # Score
     output_list.append(person_list[best_person][2]) # Missing Joint List
 
-
+    engine.stop()
     print(output_list)
     return output_list
 
