@@ -581,8 +581,10 @@ ScreenManager:
         pos_hint: {'center_y': 0.5, 'center_x': 0.1}
         bold: True
         on_press: 
+          root.ch_back_dir()
           root.manager.transition.direction = 'right'
           root.manager.current = 'custom'
+          
           
 
     FloatLayout:

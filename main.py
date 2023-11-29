@@ -25,6 +25,7 @@ from os import system, getcwd, listdir, remove
 from os.path import join, isfile, exists
 from math import ceil
 from random import choice
+from OpenPoseInter import parseImageFromPath
 
 import numpy as np
 
@@ -66,11 +67,15 @@ class ModeScreen(Screen):
 # selection screen
 class SelectionScreen(Screen):
   mode = StringProperty('')
-
+ 
   def set_all(self):
+    sel_curr_dir = getcwd()
+    print("sel_curr_dir: ", sel_curr_dir)
     if self.mode == 'integrated':
       pose_dir = 'poses'
     elif self.mode == 'custom':
+      curr_dir = getcwd()
+      print("curr_dir: ", curr_dir)
       pose_dir = 'user_poses'
     menu = self.ids['menu_grid']
     menu.bind(minimum_height = menu.setter('height'))
@@ -607,18 +612,6 @@ class CustomScreen(Screen):
 
 # pose sequence item, used in custom screen
 class PoseSequenceItem(Widget):
-
-  # def exit_button(self, posesList):
-  #   print("\n\nEXIT button:")
-  #   print("posesList = ", posesList)
-
-  # def left_button(self):
-  #   print("\n\nLEFT button pressed!\n\n")
-
-  # def right_button(self):
-  #   print("\n\nRIGHT button pressed!\n\n")
-  #   # for children in self.children:
-  #   #     print(children)
   pass
 
 # confirm screen
@@ -626,13 +619,16 @@ class ConfirmScreen(Screen):
 
   def __init__(self, **kwargs):
     super(ConfirmScreen, self).__init__(**kwargs)
-    self.filename=""
+    self.filename = ""
     self.curr_dir = getcwd()
-    self.new_filename=""
-    self.display_label=None
+    self.new_filename = ""
+    self.display_label = None
     self.posesList = []
     self.filenameList = []
     self.poseLabel = ""
+    # self.existing_custom_poses_list = []
+    self.num_custom_poses = 0
+    # self.textbox = None
     # self.textbox = None
 
   def on_pre_enter(self, *largs):
@@ -651,6 +647,12 @@ class ConfirmScreen(Screen):
 
     self.poseLabel = self.filenameList[0].split('.')[0]
 
+    # self.existing_custom_poses_list = os.listdir(f"{self.curr_dir}\\user_poses\\")
+
+    self.num_custom_poses = len(os.listdir(f"{self.curr_dir}\\user_poses\\"))
+    
+    # print("self.existing_custom_poses_list", self.existing_custom_poses_list)
+    # print("number of custom poses = ", len(self.existing_custom_poses_list))
     # print("self.filenameList = ", self.filenameList)
     def on_enter(instance): #, value
       print("value: ", instance.text)
@@ -683,6 +685,9 @@ class ConfirmScreen(Screen):
     # print("path_selected: ", path_selected)
     self.display_label = Label(text=f'[color=121212]pose / pose sequence name: {self.poseLabel}', markup=True, size_hint=(0.2, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.71}, background_color=(0,0,1,1))
     self.add_widget(self.display_label)
+
+  def ch_back_dir(self):
+    os.chdir(self.curr_dir)
 
   def exit_button(self, img_src):
     # print("\n\nEXIT button:")
@@ -737,12 +742,16 @@ class ConfirmScreen(Screen):
     # print("src: ", src)
     src.reverse()
     dest = []
+
+    pose_folder_path = ""
     # print("self.curr_dir: ", self.curr_dir)
     
     # for i in range(len(src)):
-    
-    system(f"mkdir {self.curr_dir}\\user_poses\\{self.poseLabel}")
+    pose_folder_path = f"{self.curr_dir}\\user_poses\\{self.num_custom_poses + 1} - {self.poseLabel}"
 
+    mkdir_status = system(f'mkdir "{self.curr_dir}\\user_poses\\{self.num_custom_poses + 1} - {self.poseLabel}"')
+    print("mkdir_status = ", mkdir_status)
+    print("system_cmd: ", repr(f"mkdir {pose_folder_path}") )
 
     for i in range(len(src)):
 
@@ -752,21 +761,32 @@ class ConfirmScreen(Screen):
         filename = self.new_filename
 
       # print("   src_path  : ", src_path
-      dest.append(f"{self.curr_dir}\\user_poses\\{self.poseLabel}\\{i}.{filetype}")
+      
+      dest.append(f"{pose_folder_path}\\{i}.{filetype}")
       
     # print("src: ", src)
     for j in range(len(dest)):
       if os.name == 'nt':  # Windows
+        print("dest[j]: ", dest[j])
         cmd = f'copy "{src[j]}" "{dest[j]}"'
       else:  # Unix/Linux
         cmd.replace("\\", "/")
         cmd = f'cp "{src}" "{dst}"'
       print("cmd: ", repr(cmd))
       system(cmd)
-      print("src: ", src[j])
-      print("dest: ", dest[j])
+      
+      # print("src: ", src[j])
+      # print("dest: ", dest[j])
+    print("self.curr_dir: ", self.curr_dir)
+    self.ch_back_dir()
+    main_curr_dir = getcwd()
+    print("main_curr_dir: ", main_curr_dir)
+    os.mkdir(f"{pose_folder_path}\\ref_coords")
+    # print("pose_folder_path", pose_folder_path)
+    parseImageFromPath(f'"{pose_folder_path}"', f'"{pose_folder_path}\\ref_coords"')
     self.posesList = []
     self.ids.grid_layout.clear_widgets()
+    self.remove_widget(self.display_label)
     print("done")
 
     # self.on_enter = on_enter()
