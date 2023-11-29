@@ -256,7 +256,7 @@ class TrainingScreen(Screen):
       Color(0, 0, 1, 1) # Reference in Blue
 
       # Go through all limbs
-      line_width = 4
+      line_width = 6
       head_radius = 40
       # Torso -> Right Arm Top
       Line(points=[all_x[1], all_y[1], all_x[2], all_y[2]], width=line_width)
@@ -347,7 +347,7 @@ class TrainingScreen(Screen):
       # Draw the user pose
 
       # Go through all limbs
-      line_width = 4
+      line_width = 6
       head_radius = 40
       
       # Torso -> Right Arm Top
@@ -493,7 +493,7 @@ class TrainingScreen(Screen):
     reference_pose_coords = joint_data[1]
     user_pose_coords = joint_data[2]
     limb_checklist = joint_data[3]
-    user_score = ceil(joint_data[4])
+    user_score = ceil(joint_data[4] * 100)
     missing_joints = joint_data[5]
 
     # Clear skeleton canvas
@@ -521,7 +521,7 @@ class TrainingScreen(Screen):
     print("Skeleton drawn, Score accumulated")
 
     # Check back_process return
-    if user_score >= 90:
+    if all(limb_checklist) and user_score >= 90:
       self.current_pose = str(int(self.current_pose) + 1)
       next_pose_exists = self.set_reference_image(self.mode, self.current_seq, self.current_pose)
       if next_pose_exists:
