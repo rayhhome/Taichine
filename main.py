@@ -1,819 +1,555 @@
-from comparison import backend_process
-
-import kivy
-kivy.require('2.2.1')
-
-from kivy.app import App
-from kivy.properties import StringProperty, NumericProperty, ObjectProperty, BooleanProperty
-from kivy.uix.behaviors import ButtonBehavior
-from kivy.uix.screenmanager import Screen
-from kivy.uix.textinput import TextInput
-from kivy.uix.image import Image
-from kivy.uix.label import Label
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
-from kivy.animation import Animation
-from kivy.uix.screenmanager import Screen
-from kivy.uix.widget import Widget
-from kivy.uix.camera import Camera
-from kivy.core.window import Window
-from kivy.graphics import Color, Line, Rectangle, Ellipse
-
-from plyer import filechooser
+import json
+import numpy as np
+import math
+import sys
+import argparse
+import pyttsx3
 import os
-from os import system, getcwd, listdir, remove
-from os.path import join, isfile, exists
-from math import ceil
-from random import choice
+import pygame
+import time
+import logging
+# sys.path.append("..")
 from OpenPoseInter import parseImageFromPath
 
-import numpy as np
+logging.getLogger("comtypes").setLevel(logging.WARNING)
+logging.getLogger("comtypes").setLevel(logging.ERROR)
+# Globals
+# Define a fixed vertical vector pointing straight up
+vertical_vector = np.array([0, 1])
+horizontal_vector = np.array([1, 0])
+# engine = pyttsx3.init()
 
-import json
 
-Window.minimum_width = 800
-Window.minimum_height = 600
-Window.fullscreen = 'auto'
+def play_wav_file(file_path):
+    pygame.init()
+    pygame.mixer.init()
 
-# global variables
-tolerance = 5
-preparation_time = 15
-move_on_time = 5
+    sound = pygame.mixer.Sound(file_path)
+    sound.play()
+    time.sleep(3)
+    # return
 
-path_selected = None
+# Expect to receive a tolerance level from front end
+# Return formatting:
+# {
+#   Bool PosePoss
+#   ndarray ReferenceCoordinates
+#   ndarray UserCoordinates
+#   List LimbCorrect
+#   List UserAngles
+#   List ReferenceAngles
+# }
+def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
-tips = [
-  'Tweak the tolerance slider in the setting screen to adjust the difficulty according to your condition.',
-  'Tweak the preparation time slider in the setting screen to adjust the preparation time when the training starts.',
-  'Tweak the move-on time slider in the setting screen to adjust the time interval between each pose.',
-  'Make sure all your body parts are in the camera view to get optimal evaluation results.',
-  'Upload your own pose sequences in the custom screen to train with your own poses.',
-  'High score is not the goal. Please train with your own pace.',
-  'Tai Chi is a long-term training. Please keep training and you will see the improvement.',
-  'Please consult your doctor before training if you have any health concerns.',
-  'Tai Chi is mostly for adjusting your breathing pace and enhancing cardiorespiratory endurance.',
-  'Balance is the goal. Try to keep your balance as you train.',
-  'Breath in when you move your arms up, breath out when you move your arms down.'
-]
+    path = './voice'
+    if not os.path.exists(path):
+        os.mkdir(path)
+    engine = pyttsx3.init()
 
-# menu screen
-class MenuScreen(Screen):
-  pass
+    output_list = []
+    pose_pass = False
+    name_list=["Head", "Right Shoulder", "Right Upperarm", "Right Lowerarm", "Left Shoulder", "Left Upperarm",
+               "Left Lowerarm", "Torso", "Right Waist", "Left Waist", "Right Thigh", "Right Calf", 
+               "Left Thigh", "Left Calf", "Left Feet", "Right Feet"]
 
-# mode screen, choose between integrated/custom poses
-class ModeScreen(Screen):
-  pass
+    body_parts = {
+        'head': ['Head'],
+        'upperbody': ['Torso', 'Left Waist', 'Right Waist'], 
+        'arms': ['Right Shoulder', 'Left Shoulder', 'Right Upperarm', 'Right Lowerarm', 'Left Upperarm', 'Left Lowerarm'],
+        'legs': ['Left Calf', 'Right Calf', 'Left Thigh', 'Right Thigh'],
+        'feet': ['Left Feet', 'Right Feet']
+}
+    
+    print(f"Current Tolerance Angle: {tolerance}")
+    if user_pose_path is None or ref_pose_path is None:
+        return ["Error: Please provide paths for user_pose and ref_pose."]
 
-# selection screen
-class SelectionScreen(Screen):
-  mode = StringProperty('')
+    try:
+        # Load and parse the JSON files
+        with open(user_pose_path, 'r') as file:
+            input_data = json.load(file)
+    except FileNotFoundError:
+        return ["Error: user JSON files not found."]
+
+    try:
+        curr_dir = os.getcwd()
+        print("curr_dir: ", curr_dir)
+        print("ref_pose_path: ", ref_pose_path)
+        with open(ref_pose_path, 'r') as file:
+            local_data = json.load(file)
+
+    except FileNotFoundError:
+        return ["Error: reference JSON files not found."]
+
+    # Multiple People Implementation
+    # Method: No matter how incomplete your posture is, I always just evaluate the one
+    # that is the most similar, given that the user is attempting the posture
+    # Extract the keypoints from the JSON data
+
+    local_keypoints = local_data["people"][0]["pose_keypoints_2d"]
+    local_keypoints = np.array(local_keypoints).reshape(-1, 3)
+    local_keypoints = local_keypoints[:, :2]
+
+    local_lhand_keypoints = local_data["people"][0]["hand_left_keypoints_2d"]
+    local_rhand_keypoints = local_data["people"][0]["hand_right_keypoints_2d"]
+    local_lhand_keypoints = np.array(local_lhand_keypoints).reshape(-1, 3)
+    local_rhand_keypoints = np.array(local_rhand_keypoints).reshape(-1, 3)
+    local_lhand_keypoints = local_lhand_keypoints[:, :2]
+    local_rhand_keypoints = local_rhand_keypoints[:, :2]
+
+
+    # Case: No Person in Frame
+    if not input_data["people"]:
+        print("Error: No person found")
+        return [False, local_keypoints, np.array([0]), [False], 0, ['Whole Body']]
  
-  def set_all(self):
-    sel_curr_dir = getcwd()
-    print("sel_curr_dir: ", sel_curr_dir)
-    if self.mode == 'integrated':
-      pose_dir = 'poses'
-    elif self.mode == 'custom':
-      curr_dir = getcwd()
-      print("curr_dir: ", curr_dir)
-      pose_dir = 'user_poses'
-    menu = self.ids['menu_grid']
-    menu.bind(minimum_height = menu.setter('height'))
-    allseqs = listdir(join('.', pose_dir))
-    allseqs.sort()
+    best_score = 0
+    best_person = 0
+    # Person list will be consist of cur_person in the loop below
+    # cur_person is a list formatted as following:
+    # [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
+    # average_similarity, [angles_in_rads]]
+    person_list = []
+    for i in range(len(input_data["people"])):
+        cur_person = []
+        cur_person.append(i)
+        # Extract the keypoints from the JSON data
+        input_keypoints = input_data["people"][i]["pose_keypoints_2d"]
 
-    menu.clear_widgets()
-    for seq in allseqs:
-      if isfile(join('.', pose_dir, seq, '1.png')):
-        pose = PoseItem()
-        pose.id = seq
-        pose.image = join('.', pose_dir, seq, '1.png')
-        pose.label = seq
-        pose.mode = self.mode
-        print(pose)
-        menu.add_widget(pose)  
-      else:
-        print('not a file, file name should be :', join('.', pose_dir, seq, '1.png'))
+        lhand_keypoints = input_data["people"][i]["hand_left_keypoints_2d"]
 
-# pose item (used in selection screen)
-class PoseItem(ButtonBehavior, BoxLayout):
-  id = StringProperty('')
-  image = StringProperty('')
-  label = StringProperty('')
-  mode = StringProperty('')
-  pass
+        rhand_keypoints = input_data["people"][i]["hand_right_keypoints_2d"]
 
-# setting screen 
-class SettingScreen(Screen):
+        # Ensure the two lists have the same length
+        # if len(input_keypoints) != len(local_keypoints):
+        #     raise ValueError("Keypoint lists have different lengths.")
+        
+        # if len(lhand_keypoints) != len(local_lhand_keypoints):
+        #     raise ValueError("Left Hand Keypoint lists have different lengths.")
+        
+        # if len(rhand_keypoints) != len(local_rhand_keypoints):
+        #     raise ValueError("Right Hand Keypoint lists have different lengths.")
 
-  def set_value(self):
-    global preparation_time
-    global move_on_time
-    global tolerance
-    preparation_time = self.ids.preparation_slider.value
-    move_on_time = self.ids.move_on_slider.value
-    tolerance = self.ids.tolerance_slider.value
-    print("Current Preparation Time:", preparation_time)
-    print("Current Move On Time: ", move_on_time)
-    print("Current Tolerance: ", tolerance)
+        # Reshape the arrays to have shape (n, 3)
+        input_keypoints = np.array(input_keypoints).reshape(-1, 3)
+        input_keypoints = input_keypoints[:, :2] # Remove confidence interval
+        cur_person.append(input_keypoints)  
 
-# training screen
-class TrainingScreen(Screen):
-  countdown = NumericProperty(5)
-  mode = StringProperty('')
-  current_seq  = StringProperty('')
-  current_pose = StringProperty('')
-  is_start = BooleanProperty(False)
 
-  def __init__(self, **kwargs):
-    super().__init__(**kwargs)
-    self.score_acc = 0
-    self.attempt_acc = 0
-    global preparation_time
-    self.time_acc = preparation_time
+        # List Missing joints and match missing points with names
+        missing_jointname = [] # This could be returned to frontend
+        missing_joints = [j for j, sublist in enumerate(input_keypoints) if np.array_equal(sublist, np.array([0, 0]))]
+        for joint in missing_joints:
+            if joint in range(len(name_list)):
+                # Probably do a dict
+                missing_jointname.append(name_list[joint])
+            elif joint == 19:
+                missing_jointname.append(name_list[14])
+            elif joint == 22:
+                missing_jointname.append(name_list[15])
+        # if missing_jointname != []:
+        # print(missing_jointname) # DEBUG
+        cur_person.append(missing_jointname)
+        # TODO: Say something about missing bodypart: Include your body in frame
+            # Integration TODO: return the list if non-empty? TBD
 
-  def set_reference_image(self, mode, seq_id, pos_id):
-    # Ray: there are two modes: integrated and custom
-    #      integrated: use the default poses
-    #      custom: use the user uploaded poses
-    #      seq_id: the sequence id of the pose, i.e. the folder name
-    #      pos_id: the pose id of the pose, i.e. the image name
-    #        note that the image name should always be 1, 2, 3, 4, 5...
-    #        because the order of the images matters
+        lhand_keypoints = np.array(lhand_keypoints).reshape(-1, 3)
+        rhand_keypoints = np.array(rhand_keypoints).reshape(-1, 3)
+ 
+        # Remove confidence intervals prior to comparison
+        lhand_keypoints = lhand_keypoints[:, :2]
+        rhand_keypoints = rhand_keypoints[:, :2]
 
-    #        this means if we want to allow for custom pose sequenes,
-    #        we need rename the images in the folder to these numbers
-    #        according to their order      
-    if mode == 'integrated':
-      self.ids['reference_image'].source = join('.', 'poses', seq_id, pos_id + '.png')
-    elif mode == 'custom':
-      self.ids['reference_image'].source = join('.', 'user_poses', seq_id, pos_id + '.png')
-    if exists(self.ids['reference_image'].source):
-      self.ids['reference_image'].reload()
-      self.current_seq  = seq_id
-      self.current_pose = pos_id
-      return True
+
+
+        # Defining all user inputs
+        head_torso = input_keypoints[0] - input_keypoints[1]
+        torso_rarmtop = input_keypoints[1] - input_keypoints[2]
+        rarmtop_rarmmid = input_keypoints[2] - input_keypoints[3]
+        rarmmid_rhand = input_keypoints[3] - input_keypoints[4]
+        torso_larmtop = input_keypoints[1] - input_keypoints[5]
+        larmtop_larmmid = input_keypoints[5] - input_keypoints[6]
+        larmmid_lhand = input_keypoints[6] - input_keypoints[7]
+        torso_waist = input_keypoints[1] - input_keypoints[8]
+        waist_rlegtop = input_keypoints[8] - input_keypoints[9]
+        waist_llegtop = input_keypoints[8] - input_keypoints[12]
+        rlegtop_rlegmid = input_keypoints[9] - input_keypoints[10]
+        rlegmid_rfoot = input_keypoints[10] - input_keypoints[11]
+        llegtop_llegmid = input_keypoints[12] - input_keypoints[13]
+        llegmid_lfoot = input_keypoints[13] - input_keypoints[14]
+        lfoot = input_keypoints[14] - input_keypoints[19]
+        rfoot = input_keypoints[11] - input_keypoints[22]
+        
+        input_set = [
+            tuple(head_torso), tuple(torso_rarmtop), tuple(rarmtop_rarmmid),
+            tuple(rarmmid_rhand), tuple(torso_larmtop), tuple(larmtop_larmmid),
+            tuple(larmmid_lhand), tuple(torso_waist), tuple(waist_rlegtop),
+            tuple(waist_llegtop), tuple(rlegtop_rlegmid), tuple(rlegmid_rfoot),
+            tuple(llegtop_llegmid), tuple(llegmid_lfoot), tuple(lfoot), tuple(rfoot)
+        ]
+        x_coor_input = []
+        y_coor_input = []
+        for ele in input_set:
+            x_coor_input.append(ele[0])
+            y_coor_input.append(ele[1])
+        x_coor_input = np.array(x_coor_input)
+        y_coor_input = np.array(y_coor_input)
+
+        # Define All Local Inputs
+        head_torsol = local_keypoints[0] - local_keypoints[1] # Head
+        torso_rarmtopl = local_keypoints[1] - local_keypoints[2] # Shoulder (Arm)
+        rarmtop_rarmmidl = local_keypoints[2] - local_keypoints[3] # Arm
+        rarmmid_rhandl = local_keypoints[3] - local_keypoints[4] # Arm
+        torso_larmtopl = local_keypoints[1] - local_keypoints[5] # Shoulder (Arm)
+        larmtop_larmmidl = local_keypoints[5] - local_keypoints[6] # Arm
+        larmmid_lhandl = local_keypoints[6] - local_keypoints[7] # Arm
+        torso_waistl = local_keypoints[1] - local_keypoints[8] # Upper Body
+        waist_rlegtopl = local_keypoints[8] - local_keypoints[9] # Waist (Leg)
+        waist_llegtopl = local_keypoints[8] - local_keypoints[12] # Waist (Leg)
+        rlegtop_rlegmidl = local_keypoints[9] - local_keypoints[10] # Leg
+        rlegmid_rfootl = local_keypoints[10] - local_keypoints[11] # Leg
+        llegtop_llegmidl = local_keypoints[12] - local_keypoints[13] # Leg
+        llegmid_lfootl = local_keypoints[13] - local_keypoints[14] # Leg
+        lfootl = local_keypoints[14] - local_keypoints[19] # Feet (Leg)
+        rfootl = local_keypoints[11] - local_keypoints[22] # Feet (Leg)
+
+        userisfist_left = False
+        userisfist_right = False
+        localisfist_left = False
+        localisfist_right = False  
+
+        local_set = [
+            tuple(head_torsol), tuple(torso_rarmtopl), tuple(rarmtop_rarmmidl),
+            tuple(rarmmid_rhandl), tuple(torso_larmtopl), tuple(larmtop_larmmidl),
+            tuple(larmmid_lhandl), tuple(torso_waistl), tuple(waist_rlegtopl),
+            tuple(waist_llegtopl), tuple(rlegtop_rlegmidl), tuple(rlegmid_rfootl),
+            tuple(llegtop_llegmidl), tuple(llegmid_lfootl), tuple(lfootl), tuple(rfootl)
+        ]
+        x_coor_local = []
+        y_coor_local = []
+        for ele in local_set:
+            x_coor_local.append(ele[0])
+            y_coor_local.append(ele[1])
+        x_coor_local = np.array(x_coor_local)
+        y_coor_local = np.array(y_coor_local)
+
+################ Starting hand Comparison ##################
+        lhand_set = [
+            tuple(lhand_keypoints[0]), tuple(lhand_keypoints[9]), tuple(lhand_keypoints[10]),
+            tuple(lhand_keypoints[11]), tuple(lhand_keypoints[12])
+        ]
+
+        rhand_set = [
+            tuple(rhand_keypoints[0]), tuple(rhand_keypoints[9]), tuple(rhand_keypoints[10]),
+            tuple(rhand_keypoints[11]), tuple(rhand_keypoints[12])
+        ]
+
+        local_lhand_set = [
+            tuple(local_lhand_keypoints[0]), tuple(local_lhand_keypoints[9]), tuple(local_lhand_keypoints[10]),
+            tuple(local_lhand_keypoints[11]), tuple(local_lhand_keypoints[12])
+        ]
+
+        local_rhand_set = [
+            tuple(local_rhand_keypoints[0]), tuple(local_rhand_keypoints[9]), tuple(local_rhand_keypoints[10]),
+            tuple(local_rhand_keypoints[11]), tuple(local_rhand_keypoints[12])
+        ]
+
+        # User input
+        lhand_x = [keypoint[0] for keypoint in lhand_set]
+        lhand_y = [keypoint[1] for keypoint in lhand_set]
+
+        rhand_x = [keypoint[0] for keypoint in rhand_set]
+        rhand_y = [keypoint[1] for keypoint in rhand_set]
+
+        # Checking for a general trend in x coordinates for both sets
+        lnot_fist_x = all(x <= y for x, y in zip(lhand_x, lhand_x[1:])) or all(x >= y for x, y in zip(lhand_x, lhand_x[1:]))
+        rnot_fist_x = all(x <= y for x, y in zip(rhand_x, rhand_x[1:])) or all(x >= y for x, y in zip(rhand_x, rhand_x[1:]))
+
+        # Checking for a general trend in y coordinates for both sets
+        lnot_fist_y = all(x <= y for x, y in zip(lhand_y, lhand_y[1:])) or all(x >= y for x, y in zip(lhand_y, lhand_y[1:]))
+        rnot_fist_y = all(x <= y for x, y in zip(rhand_y, rhand_y[1:])) or all(x >= y for x, y in zip(rhand_y, rhand_y[1:]))
+
+        luser_result = [lnot_fist_x, lnot_fist_y]
+        ruser_result = [rnot_fist_x, rnot_fist_y]
+
+        if all(luser_result):
+            userisfist_left = False
+        else:
+            userisfist_left = True
+        
+        if all(ruser_result):
+            userisfist_right = False
+        else:
+            userisfist_right = True
+
+        # Reference Handpose
+        lhand_xl = [keypoint[0] for keypoint in local_lhand_set]
+        lhand_yl = [keypoint[1] for keypoint in local_lhand_set]
+
+        rhand_xl = [keypoint[0] for keypoint in local_rhand_set]
+        rhand_yl = [keypoint[1] for keypoint in local_rhand_set]
+
+        # Checking for a general trend in x coordinates for both sets
+        lnot_fist_xl = all(x <= y for x, y in zip(lhand_xl, lhand_xl[1:])) or all(x >= y for x, y in zip(lhand_xl, lhand_xl[1:]))
+        rnot_fist_xl = all(x <= y for x, y in zip(rhand_xl, rhand_xl[1:])) or all(x >= y for x, y in zip(rhand_xl, rhand_xl[1:]))
+
+        # Checking for a general trend in y coordinates for both sets
+        lnot_fist_yl = all(x <= y for x, y in zip(lhand_yl, lhand_yl[1:])) or all(x >= y for x, y in zip(lhand_yl, lhand_yl[1:]))
+        rnot_fist_yl = all(x <= y for x, y in zip(rhand_yl, rhand_yl[1:])) or all(x >= y for x, y in zip(rhand_yl, rhand_yl[1:]))
+
+        luser_resultl = [lnot_fist_xl, lnot_fist_yl]
+        ruser_resultl = [rnot_fist_xl, rnot_fist_yl]
+
+        if all(luser_resultl):
+            localisfist_left = False
+        else:
+            localisfist_left = True
+        
+        if all(ruser_resultl):
+            localisfist_right = False
+        else:
+            localisfist_right = True
+
+        if localisfist_right != userisfist_right and localisfist_left != userisfist_left:
+            cur_person.append(["right", "left"])
+        elif localisfist_right != userisfist_right:
+            cur_person.append(["right"])
+            message = "Check your Right Hand Posture!"
+            print(message)
+            # engine.say(message)
+            # engine.runAndWait()     
+            out_path = f'test0.mp3'
+            engine.save_to_file(message, 'test0.mp3')
+            engine.runAndWait()
+            play_wav_file(out_path)
+
+        elif localisfist_left != userisfist_left:
+            cur_person.append(["left"])
+            message = "Check your Left Hand Posture!"
+            print(message)
+            # engine.say(message)
+            # engine.runAndWait()
+            out_path = f'test1.mp3'
+            engine.save_to_file(message, 'test1.mp3')
+            engine.runAndWait()
+            play_wav_file(out_path)
+        else:
+            cur_person.append([])
+################## End of Hand Comparison #########################
+
+        # Body part comparison
+        similarities = []
+        angles_in_rads = []
+
+        # The angle from np.arctan2 will be the angle between the vector and negative x-axis
+        local_quads_final = []
+        input_quads_final = []
+        local_quads = np.arctan2(y_coor_local, x_coor_local) * 180 / np.pi # Conversion from rads
+        input_quads = np.arctan2(y_coor_input, x_coor_input) * 180 / np.pi # ^^
+        for deg in local_quads:
+            if deg < 0:
+                deg = -180 - deg
+            else:
+                deg = 180 - deg
+            local_quads_final.append(round(deg, 4))
+        for deg2 in input_quads:
+            if deg2 < 0:
+                deg2 = -180 - deg2
+            else:
+                deg2 = 180 - deg2
+            input_quads_final.append(round(deg2, 4))
+        cur_person.append(input_quads_final)
+
+        for vector1, vector2 in zip(input_set, local_set):
+            norm1 = np.linalg.norm(vector1)
+            norm2 = np.linalg.norm(vector2)
+
+            # Check if either norm is zero or very close to zero
+            if norm1 < 1e-10 or norm2 < 1e-10:
+                # Handle the case where the magnitude is too small
+                similarity = 0.0
+                angle = 0.0
+            else:
+                similarity = np.dot(vector1, vector2) / (norm1 * norm2)
+                similarity = max(-1, min(1, similarity))
+                angle = np.arccos(similarity) # Radians
+
+            similarities.append(similarity)
+            angles_in_rads.append(angle)
+
+        average_similarity = np.mean(similarities) # TODO: Pending for changes, valuing lower body part more?
+        print(f"Score: {average_similarity*100}")
+        cur_person.append(average_similarity)
+        cur_person.append(angles_in_rads)
+        person_list.append(cur_person)
+        if average_similarity > best_score:
+            best_score = average_similarity
+            best_person = i
+
+    # print(best_score)
+    # print(person_list)
+
+    limb_checklist = [] # Passing to Frontend for limb correctness drawing
+    max_degrees = 0
+    error_namelist = []
+    error_angle = []
+    sentence_list = []
+
+    # Uncomment the following to check outputs without full body in frame
+    # if len(person_list[best_person][1]) != 0:
+    #     best_radians = []
+    # else:
+    best_radians = person_list[best_person][-1] # Return this angle list to front end for skeleton drawing
+    # print(best_radians)
+    # if len(best_radians) == 0:
+    #     out_path = "D:/Workspace/Taichine/Voice/Bad.wav" # TODO: Designated Folder/Flash Storage
+    #     message = "Adjust your posture to include full body in frame"
+    #     print(message)
+    #     text_to_speech(message, out_path)
+    #     play_wav_file(out_path)
+    # Comment out this branch above to test without full body images
+    # else:
+    # TODO: Check torso and head first before checking rest of the body parts according to Taichi expert
+    # (head_torsol, torso_waistl), (head_torso, torso_waist)
+    # [0] and [7] compare the rads -> tolerance, give errors if those are wrong
+
+    word_choice = [["outwards", "inwards"], ["upwards", "downwards"]]
+    angle_differences = [(a - b + 180) % 360 - 180 for a, b in zip(person_list[best_person][4], local_quads_final)]
+    # print(angle_differences)
+    # for rad in best_radians:
+    #     passed_angle.append(rad * 180 / math.pi)
+        # Conversion to Degrees
+    for k, (similarity, angle_degrees) in enumerate(zip(similarities, angle_differences)):
+        if abs(angle_degrees) < tolerance:
+            limb_checklist.append(True)
+            continue
+        else:
+            if math.isnan(angle_degrees):
+                continue
+                # print(f"Angle (in degrees) between {name_list[k]} and reference pose: 0.0000")
+            else:
+                if k in [1, 4, 8, 9]: # Representing Shoulder and Waist, Up and Down would be make more sense on those joints
+                    m = 1
+                else:
+                    m = 0
+                if angle_degrees > 0: # Comparing to decide whether user have overdone or underdone the pose
+                    n = 0
+                else:
+                    n = 1
+                message = f"Turn your {name_list[k]} {word_choice[m][n]} by {abs(round(angle_degrees))} degrees"
+                sentence_list.append(message)
+                limb_checklist.append(False)
+                error_namelist.append(name_list[k])
+                error_angle.append(angle_degrees)
+            if angle_degrees > max_degrees:
+                max_degrees = angle_degrees 
+
+    if not error_namelist: # All poses pass == Error list empty
+        message = "Great, you made it!"
+        print("Great, you made it! You mastered the pose.")
+
+        out_path = f'test2.mp3'
+        engine.save_to_file(message, 'test2.mp3')
+        engine.runAndWait()
+        play_wav_file(out_path)
+        # engine.say(message)
+        # engine.runAndWait()     
+        pose_pass = True
+    elif person_list[best_person][2]:
+        message = "Adjust your posture to include full body in frame"
+        out_path = f'test3.mp3'
+        engine.save_to_file(message, 'test3.mp3')
+        engine.runAndWait()
+        play_wav_file(out_path)
+        # engine.say(message)
+        # engine.runAndWait()
     else:
-      return False
-
-  def start_training(self):
-    '''
-    https://stackoverflow.com/questions/41937173/kivy-simple-countdown-minute-and-second-timer
-    '''
-
-    def finish_callback(animation, training_screen):
-      '''
-      https://kivy.org/doc/stable/examples/gen__camera__main__py.html
-      '''
-      start_button = self.ids['start_button']
-      start_button.text = "Start"
-      camera = self.ids['camera']
-      if (not os.path.exists(join('.', 'user_input'))):
-        os.makedirs(join('.', 'user_input'))
-      camera.export_to_png(join('.', 'user_input', 'user.png'))
-
-      # Ray: backend processing moved to move_on() 
-      # backend_process()
-      self.move_on()
-
-    self.start_countdown(finish_callback)
-
-  def start_stop_button(self):
-    self.is_start = not self.is_start
-
-    if(self.is_start == True):
-      self.ids['score_label'].text = "Follow the reference..."
-      self.start_training()
-      self.ids.start_button.text = 'Stop'
-    else:
-      # self.is_start == False
-      self.ids['score_label'].text = "Press Start to Continue"
-      self.set_preparation_countdown()
-      self.ids.start_button.text = 'Start'
-      self.stop_countdown()
-
-  def stop_countdown(self):
-    self.anim.cancel(self)
-
-  def set_preparation_countdown(self):
-    # Ray: set the value for the countdown timer for preparation phase
-    self.countdown = preparation_time
-
-  def set_move_on_countdown(self):
-    # Ray: set the value for the countdown timer for move on phase
-    self.countdown = move_on_time
-
-  # Ray: actually start the countdown timer 
-  #      and call the callback function when countdown reaches 0
-  def start_countdown(self, callback_func):
-    Animation.cancel_all(self)
-    self.anim = Animation(countdown=0, duration=self.countdown)
-    self.anim.bind(on_complete=callback_func)
-    self.anim.start(self)
-
-  def draw_reference_skeleton(self, pose_coords):
-    # Deal with input coordinates
-    all_x = pose_coords[:,0]
-    all_y = pose_coords[:,1]
-    min_x = np.min(all_x)
-    max_x = np.max(all_x)
-    min_y = np.min(all_y)
-    max_y = np.max(all_y)
-    input_width = max_x - min_x
-    input_height = max_y - min_y
-
-    # Calculate offsets and scales to fit the canvas
-    x_offset = 0
-    y_offset = 0
-    x_scale = 1
-    y_scale = 1
-
-    draw_width = self.ids.skeleton_canvas.width * 0.8
-    draw_height = self.ids.skeleton_canvas.height * 0.8
-    input_dimension = input_width / input_height
-    canvas_dimension = draw_width / draw_height
-
-    if input_dimension > canvas_dimension:
-      # Input is wider than canvas
-      x_scale = draw_width / input_width
-      y_scale = x_scale
-      y_offset = (draw_height - input_height * y_scale) / 2 + draw_height * 0.1
-      x_offset = draw_width * 0.1
-    else:
-      # Input is taller than canvas
-      y_scale = draw_height / input_height
-      x_scale = y_scale
-      x_offset = (draw_width - input_width * x_scale) / 2 + draw_width * 0.1
-      y_offset = draw_height * 0.1
-
-    # Modify coordinates to fit the canvas
-    all_x = (all_x - min_x) * x_scale + x_offset
-    all_y = (max_y - all_y) * y_scale + y_offset
-
-    # Start drawing
-    with self.ids.skeleton_canvas.canvas:
-      # Draw the reference pose
-      Color(0, 0, 1, 1) # Reference in Blue
-
-      # Go through all limbs
-      line_width = 4
-      head_radius = 40
-      # Torso -> Right Arm Top
-      Line(points=[all_x[1], all_y[1], all_x[2], all_y[2]], width=line_width)
-      # Right Arm Top -> Right Arm Middle
-      Line(points=[all_x[2], all_y[2], all_x[3], all_y[3]], width=line_width)
-      # Right Arm Middle -> Right Hand
-      Line(points=[all_x[3], all_y[3], all_x[4], all_y[4]], width=line_width)
-      # Torso -> Left Arm Top
-      Line(points=[all_x[1], all_y[1], all_x[5], all_y[5]], width=line_width)
-      # Left Arm Top -> Left Arm Middle
-      Line(points=[all_x[5], all_y[5], all_x[6], all_y[6]], width=line_width)
-      # Left Arm Middle -> Left Hand
-      Line(points=[all_x[6], all_y[6], all_x[7], all_y[7]], width=line_width)
-      # Torso -> Waist
-      Line(points=[all_x[1], all_y[1], all_x[8], all_y[8]], width=line_width)
-      # Waist -> Right Leg Top
-      Line(points=[all_x[8], all_y[8], all_x[9], all_y[9]], width=line_width)
-      # Right Leg Top -> Right Leg Middle
-      Line(points=[all_x[9], all_y[9], all_x[10], all_y[10]], width=line_width)
-      # Right Leg Middle -> Right Foot
-      Line(points=[all_x[10], all_y[10], all_x[11], all_y[11]], width=line_width)
-      # Waist -> Left Leg Top
-      Line(points=[all_x[8], all_y[8], all_x[12], all_y[12]], width=line_width)
-      # Left Leg Top -> Left Leg Middle
-      Line(points=[all_x[12], all_y[12], all_x[13], all_y[13]], width=line_width)
-      # Left Leg Middle -> Left Foot
-      Line(points=[all_x[13], all_y[13], all_x[14], all_y[14]], width=line_width)
-      # Left Foot -> Left Toe
-      Line(points=[all_x[14], all_y[14], all_x[19], all_y[19]], width=line_width)
-      # Right Foot -> Right Toe
-      Line(points=[all_x[11], all_y[11], all_x[22], all_y[22]], width=line_width)
-      # Head -> Torso
-      Line(points=[all_x[0], all_y[0], all_x[1], all_y[1]], width=line_width)
-      Ellipse(pos=(all_x[0] - head_radius, all_y[0] - head_radius), size=(head_radius * 2, head_radius * 2))
-    
-    return (all_x[8], all_y[8])
-
-  def draw_user_skeleton(self, pose_coords, ref_waist_pos, checklist, missing_joints):
-    if (len(missing_joints) > 0):
-      print("not drawing all skeletons due to player not fully in screen")
-      return
-    # Deal with input coordinates
-    all_x = pose_coords[:,0]
-    all_y = pose_coords[:,1]
-    min_x = np.min(all_x)
-    max_x = np.max(all_x)
-    min_y = np.min(all_y)
-    max_y = np.max(all_y)
-    input_width = max_x - min_x
-    input_height = max_y - min_y
-
-    # Calculate offsets and scales to fit the canvas
-    x_offset = 0
-    y_offset = 0
-    x_scale = 1
-    y_scale = 1
-
-    draw_width = self.ids.skeleton_canvas.width * 0.8
-    draw_height = self.ids.skeleton_canvas.height * 0.8
-    input_dimension = input_width / input_height
-    canvas_dimension = draw_width / draw_height
-
-    if input_dimension > canvas_dimension:
-      # Input is wider than canvas
-      x_scale = draw_width / input_width
-      y_scale = x_scale
-      y_offset = (draw_height - input_height * y_scale) / 2 + draw_height * 0.1
-      x_offset = draw_width * 0.1
-    else:
-      # Input is taller than canvas
-      y_scale = draw_height / input_height
-      x_scale = y_scale
-      x_offset = (draw_width - input_width * x_scale) / 2 + draw_width * 0.1
-      y_offset = draw_height * 0.1
-
-    # Modify coordinates to fit the canvas
-    all_x = (all_x - min_x) * x_scale + x_offset 
-    all_y = (max_y - all_y) * y_scale + y_offset
-
-    cur_user_waist_x = all_x[8]
-    cur_user_waist_y = all_y[8]
-    
-    all_x = all_x - cur_user_waist_x + ref_waist_pos[0]
-    all_y = all_y - cur_user_waist_y + ref_waist_pos[1]
-
-    # Start drawing
-    with self.ids.skeleton_canvas.canvas:
-      # Draw the user pose
-
-      # Go through all limbs
-      line_width = 4
-      head_radius = 40
-      
-      # Torso -> Right Arm Top
-      if checklist[1]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[1], all_y[1], all_x[2], all_y[2]], width=line_width)
-      
-      # Right Arm Top -> Right Arm Middle
-      if checklist[2]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[2], all_y[2], all_x[3], all_y[3]], width=line_width)
-      
-      # Right Arm Middle -> Right Hand
-      if checklist[3]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[3], all_y[3], all_x[4], all_y[4]], width=line_width)
-      
-      # Torso -> Left Arm Top
-      if checklist[4]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[1], all_y[1], all_x[5], all_y[5]], width=line_width)
-      
-      # Left Arm Top -> Left Arm Middle
-      if checklist[5]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red      
-      Line(points=[all_x[5], all_y[5], all_x[6], all_y[6]], width=line_width)
-      
-      # Left Arm Middle -> Left Hand
-      if checklist[6]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[6], all_y[6], all_x[7], all_y[7]], width=line_width)
-      
-      # Torso -> Waist
-      if checklist[7]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[1], all_y[1], all_x[8], all_y[8]], width=line_width)
-      
-      # Waist -> Right Leg Top
-      if checklist[8]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red      
-      Line(points=[all_x[8], all_y[8], all_x[9], all_y[9]], width=line_width)
-      
-      # Right Leg Top -> Right Leg Middle
-      if checklist[9]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[9], all_y[9], all_x[10], all_y[10]], width=line_width)
-      
-      # Right Leg Middle -> Right Foot
-      if checklist[10]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[10], all_y[10], all_x[11], all_y[11]], width=line_width)
-      
-      # Waist -> Left Leg Top
-      if checklist[11]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[8], all_y[8], all_x[12], all_y[12]], width=line_width)
-      
-      # Left Leg Top -> Left Leg Middle
-      if checklist[12]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[12], all_y[12], all_x[13], all_y[13]], width=line_width)
-      
-      # Left Leg Middle -> Left Foot
-      if checklist[13]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[13], all_y[13], all_x[14], all_y[14]], width=line_width)
-      
-      # Left Foot -> Left Toe
-      if checklist[14]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[14], all_y[14], all_x[19], all_y[19]], width=line_width)
-      
-      # Right Foot -> Right Toe
-      if checklist[15]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[11], all_y[11], all_x[22], all_y[22]], width=line_width)
-      
-      # Head -> Torso
-      if checklist[0]:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Line(points=[all_x[0], all_y[0], all_x[1], all_y[1]], width=line_width)
-      
-      
-      Ellipse(pos=(all_x[0] - head_radius, all_y[0] - head_radius), size=(head_radius * 2, head_radius * 2))
-    pass
-
-  def remove_user_pic(self):
-    if (os.path.exists(join('.', 'user_input', 'user.png'))):
-      remove(join('.', 'user_input', 'user.png'))
-
-  def move_on(self):
-    print("move_on() called")
-    global tolerance
-    joint_data = backend_process(self.mode, self.current_seq, self.current_pose, tolerance)
-    
-    if len(joint_data) == 1:
-      # Error! Switch to result screen
-      print("Error encountered")
-      self.is_start = False
-      self.remove_user_pic()
-      self.manager.get_screen('result').ids['average_score'].text = joint_data[0]
-      self.manager.get_screen('result').ids['total_time'].text = ''
-      self.manager.get_screen('result').ids['tips_label'].text = ''
-      self.manager.current = 'result'
-      return
-
-      # return
-    # Drawing pipeline
-    # Extract all joint data
-    pose_pass = joint_data[0]
-    reference_pose_coords = joint_data[1]
-    user_pose_coords = joint_data[2]
-    limb_checklist = joint_data[3]
-    user_score = ceil(joint_data[4])
-    missing_joints = joint_data[5]
-
-    # Clear skeleton canvas
-    canvas_to_draw = self.ids.skeleton_canvas
-    canvas_to_draw.canvas.clear()  
-
-    # Show Signal
-    with canvas_to_draw.canvas:
-      if pose_pass:
-        Color(0, 1, 0, 1) # Correct in Green
-      else:
-        Color(1, 0, 0, 1) # Wrong in Red
-      Rectangle(pos=(0, 0), size=(canvas_to_draw.width, canvas_to_draw.height))
-      Color(0, 0, 0, 1) # Background in Black
-      Rectangle(pos=(10, 10), size=(canvas_to_draw.width - 20, canvas_to_draw.height - 20))
-
-    # Draw poses  
-    ref_waist_pos = self.draw_reference_skeleton(reference_pose_coords)
-    self.draw_user_skeleton(user_pose_coords, ref_waist_pos, limb_checklist, missing_joints)
-
-    # accumulate score and attempt
-    self.score_acc += user_score
-    self.attempt_acc += 1
-
-    print("Skeleton drawn, Score accumulated")
-
-    # Check back_process return
-    if user_score >= 90:
-      self.current_pose = str(int(self.current_pose) + 1)
-      next_pose_exists = self.set_reference_image(self.mode, self.current_seq, self.current_pose)
-      if next_pose_exists:
-        # Display new reference and user skelectons with correct body part
-        # Verbal instruction reading "great job"
-        self.ids['score_label'].text = f'Score: {user_score}! Keep it up!'
-
-        # Set up countdown timer here with move on interval
-        self.set_move_on_countdown()
-        self.start_training()
-        print("Next pose exists")
-      else:
-        # Training Over! Switch to result screen
-        self.is_start = False
-        self.remove_user_pic()
-        self.manager.get_screen('result').ids['average_score'].text = f'Your Final Score: {ceil(self.score_acc / self.attempt_acc)}'
-        self.manager.get_screen('result').ids['total_time'].text = f'Total Training Time: {ceil(self.time_acc)}s'
-        self.manager.get_screen('result').ids['tips_label'].text = f'Tip: {choice(tips)}'
-        self.manager.current = 'result'
-        print("Next pose does not exist")
-    else:
-      # Switch reference image to next pose using set_reference_image()
-      # Display new reference and user skelectons with correct body part
-      # Verbal instruction reading "great job"
-      self.ids['score_label'].text = f'Score: {user_score}. You can do it!'
-
-      # Set up countdown timer here with move on interval
-      self.set_move_on_countdown()
-      self.start_training()
-      print("Score too low")
-    
-    # accumulate total training time
-    global move_on_time
-    self.time_acc += move_on_time
-    print("time accumulated")
-
-  def on_countdown(self, instance, value):
-    # Ray: this is for animation of the start button text
-    #      it starts with "on" for a purpose: to match weired kivy syntax
-    #      don't call it in any function in this class
-    #      don't call it in any function in this class
-    #      don't call it in any function in this class
-    start_button = self.ids['start_button']
-    start_button.text = str(round(value, 1))
-
-# trimmed camera, used in training screen
-class TrimmedCamera(Camera):
-  # https://stackoverflow.com/questions/67967041/how-can-i-use-kivy-to-zoom-in-or-zoom-out-live-camera
-  region_x = NumericProperty(200)
-  region_y = NumericProperty(0)
-  region_w = NumericProperty(240)
-  region_h = NumericProperty(480)
-  
-  def on_tex(self, camera):
-    self.texture = texture = camera.texture
-    # get some region
-    self.texture = self.texture.get_region(self.region_x, self.region_y, self.region_w, self.region_h)
-    self.texture_size = list(texture.size)
-    self.canvas.ask_update()
-
-# result screen
-class ResultScreen(Screen):
-  pass
-
-# custom screen
-class CustomScreen(Screen):
-  
-  def __init__(self, **kwargs):
-    self.curr_dir = curr_dir = getcwd()
-    self.poses_folder = join(curr_dir, "user_poses")
-    print("self.curr_dir: ", self.curr_dir)
-    self.cancel = False
-    super().__init__(**kwargs)
-
-  def select_file(self):
-    system(f"mkdir {self.poses_folder}")
-    filechooser.open_file(on_selection = self.selected, multiple=True)
-    
-  def selected(self, selection):
-    # print("len(selection) = ", len(selection))
-    if(len(selection) == 0):
-      self.cancel = True 
-      return
-    # print("self.cancel", self.cancel)
-    # print("selection = ", selection)
-    globals()['path_selected'] = selection
-    # print("globals()['path_selected']: ", globals()["path_selected"])
-
-# pose sequence item, used in custom screen
-class PoseSequenceItem(Widget):
-  pass
-
-# confirm screen
-class ConfirmScreen(Screen):
-
-  def __init__(self, **kwargs):
-    super(ConfirmScreen, self).__init__(**kwargs)
-    self.filename = ""
-    self.curr_dir = getcwd()
-    self.new_filename = ""
-    self.display_label = None
-    self.posesList = []
-    self.filenameList = []
-    self.poseLabel = ""
-    # self.existing_custom_poses_list = []
-    self.num_custom_poses = 0
-    # self.textbox = None
-    # self.textbox = None
-
-  def on_pre_enter(self, *largs):
-    print("self.curr_dir: ", self.curr_dir)
-    # print("new screen globals()['path_selected']: ", globals()['path_selected'])
-    #  height=30,
-
-    self.posesList = globals()['path_selected']
-
-    num_poses = len(self.posesList)
-
-    for j in range(num_poses):
-      splitList = self.posesList[j].split('\\')
-      filename = splitList[-1]
-      self.filenameList.append(filename)
-
-    self.poseLabel = self.filenameList[0].split('.')[0]
-
-    # self.existing_custom_poses_list = os.listdir(f"{self.curr_dir}\\user_poses\\")
-
-    self.num_custom_poses = len(os.listdir(f"{self.curr_dir}\\user_poses\\"))
-    
-    # print("self.existing_custom_poses_list", self.existing_custom_poses_list)
-    # print("number of custom poses = ", len(self.existing_custom_poses_list))
-    # print("self.filenameList = ", self.filenameList)
-    def on_enter(instance): #, value
-      print("value: ", instance.text)
-      self.poseLabel = instance.text
-      self.display_label.text = f'[color=121212]pose / pose sequence name: {instance.text}'
-
-    # grid_layout = GridLayout(rows=1, orientation='lr-tb', padding=5, size_hint=(1, 0.7), pos_hint={'center_x': 0.5,'center_y': 0.55})
-    # self.add_widget(grid_layout)
-    
-    # new children widgets are "added from the front"
-    for i in range(num_poses):
-      pose_item = PoseSequenceItem()
-      pose_item.ids.pose_image.source = self.posesList[i]
-      pose_item.ids.image_label.text = self.filenameList[i]
-      self.ids.grid_layout.add_widget(pose_item)
-    
-    self.posesList.reverse()
-
-    
-    # for i2 in range(num_poses):
-    #   print("child ", i2, " : ", self.ids.grid_layout.children[i2].ids.pose_image.source)
-    #   print(f"self.posesList[{i2}] : ", self.posesList[i2])
-    textLabel = Label(text='Enter Pose or Pose Sequence Name Here:', color=(0,0,0,1), pos_hint={'center_x': 0.5, 'center_y': 0.79})
-    self.add_widget(textLabel)
-    textbox = TextInput(size_hint=(0.3, 0.05), pos_hint={'center_x': 0.5, 'center_y': 0.75}, cursor_blink=True, multiline=False)
-    textbox.bind(on_text_validate=on_enter)
-    self.add_widget(textbox)
-
-    # print("file_label: ", self.file_label)
-    # print("path_selected: ", path_selected)
-    self.display_label = Label(text=f'[color=121212]pose / pose sequence name: {self.poseLabel}', markup=True, size_hint=(0.2, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.71}, background_color=(0,0,1,1))
-    self.add_widget(self.display_label)
-
-  def ch_back_dir(self):
-    os.chdir(self.curr_dir)
-
-  def exit_button(self, img_src):
-    # print("\n\nEXIT button:")
-    # print("img_src = ", img_src)
-    # print("self.posesList: ", self.posesList)
-    # print("self.ids.grid_layout.children[0]: ", self.ids.grid_layout.children[0].ids.pose_image.source)
-    # print("self.ids.grid_layout.children[1]: ", self.ids.grid_layout.children[1].ids.pose_image.source)
-
-    num_poses = len(self.posesList)
-    # print("num_poses", num_poses)
-    # print("len(self.ids.grid_layout.children)", len(self.ids.grid_layout.children))
-    
-    for i in range(num_poses):
-      if(self.posesList[i] == img_src):
-        self.posesList.pop(i)
-        self.ids.grid_layout.remove_widget(self.ids.grid_layout.children[i])
-        break    
-
-  def left_button(self, img_src):
-    # print("\n\nLEFT button pressed!\n\n")
-    # num_poses = len(self.posesList)
-    # # print("num_poses", num_poses)
-    # # print("len(self.ids.grid_layout.children)", len(self.ids.grid_layout.children))
-    num_poses = len(self.posesList)
-
-    for i in range(num_poses):
-      if(self.posesList[i] == img_src):
-        img_index = i
-        break
-    if(img_index == (num_poses - 1)):
-      return
-    else:
-      swap(self.posesList, i, i + 1)
-      swap(self.ids.grid_layout.children, img_index, img_index + 1)
-
-  def right_button(self, img_src):
-    # print("\n\nRIGHT button pressed!\n\n")
-    num_poses = len(self.posesList)
-
-    for i in range(num_poses):
-      if(self.posesList[i] == img_src):
-        img_index = i
-        break
-    if(img_index == 0):
-      return
-    else:
-      swap(self.posesList, i - 1, i)
-      swap(self.ids.grid_layout.children, img_index - 1, img_index)
-  
-  def confirmed(self):
-    src = globals()['path_selected']
-    # print("src: ", src)
-    src.reverse()
-    dest = []
-
-    pose_folder_path = ""
-    # print("self.curr_dir: ", self.curr_dir)
-    
-    # for i in range(len(src)):
-    pose_folder_path = f"{self.curr_dir}\\user_poses\\{self.num_custom_poses + 1} - {self.poseLabel}"
-
-    mkdir_status = system(f'mkdir "{self.curr_dir}\\user_poses\\{self.num_custom_poses + 1} - {self.poseLabel}"')
-    print("mkdir_status = ", mkdir_status)
-    print("system_cmd: ", repr(f"mkdir {pose_folder_path}") )
-
-    for i in range(len(src)):
-
-      filename, filetype = getFileTypeAndName(src[i]) 
-    
-      if(self.new_filename != ""):
-        filename = self.new_filename
-
-      # print("   src_path  : ", src_path
-      
-      dest.append(f"{pose_folder_path}\\{i + 1}.{filetype}")
-      
-    # print("src: ", src)
-    for j in range(len(dest)):
-      if os.name == 'nt':  # Windows
-        print("dest[j]: ", dest[j])
-        cmd = f'copy "{src[j]}" "{dest[j]}"'
-      else:  # Unix/Linux
-        cmd.replace("\\", "/")
-        cmd = f'cp "{src}" "{dst}"'
-      print("cmd: ", repr(cmd))
-      system(cmd)
-      
-      # print("src: ", src[j])
-      # print("dest: ", dest[j])
-    print("self.curr_dir: ", self.curr_dir)
-    self.ch_back_dir()
-    main_curr_dir = getcwd()
-    print("main_curr_dir: ", main_curr_dir)
-    os.mkdir(f"{pose_folder_path}\\ref_coords")
-    # print("pose_folder_path", pose_folder_path)
-    parseImageFromPath(f'"{pose_folder_path}"', f'"{pose_folder_path}\\ref_coords"')
-    self.posesList = []
-    self.ids.grid_layout.clear_widgets()
-    self.remove_widget(self.display_label)
-    print("done")
-
-    # self.on_enter = on_enter()
-
-# swap two elements in a list
-def swap(list, indexA, indexB):
-  temp = list[indexA]
-  list[indexA] = list[indexB]
-  list[indexB] = temp
-
-# get the file type and name from the file source
-def getFileTypeAndName(fileSrc):
-  print("fileSrc", fileSrc)
-  src_split_list = fileSrc.split('\\')
-  print("src_split_list", src_split_list)
-  filenameAndType = src_split_list[-1]
-  filename_list = filenameAndType.split('.')
-  print("filename_list", filename_list)
-  print(filename_list)
-  filetype = filename_list[-1]
-  filename = filename_list[0]
-
-  return filename, filetype
-
-# actual app
-class TaichineApp(App):
-  pass 
-
-if __name__ == '__main__':
-  TaichineApp().run()
+        # worst_angle = round(max(angle_differences, key=abs))
+        # message = f"Your worst angle is {worst_angle} degrees at {name_list[max_k]}"
+        print(sentence_list)
+        message = sentence_list[-1]
+        out_path = f'test4.mp3'
+        engine.save_to_file(message, 'test4.mp3')
+        engine.runAndWait()
+        play_wav_file(out_path)
+        # engine.say(message)
+        # engine.runAndWait()
+
+    # person_list = [[cur_person], [cur_person], ...]
+    # cur_person = [i, [input_keypoints], [missing_jointname], ["right" , "left"], [input_quads_final], 
+    # average_similarity, [angles_in_rads]]
+    output_list.append(pose_pass)                   # Whether the pose Passes
+    output_list.append(local_keypoints)             # Ref Body Coordinates
+    output_list.append(person_list[best_person][1]) # User Body Coordinates
+    output_list.append(limb_checklist)              # Limb Checklist
+    # output_list.append(person_list[best_person][4]) # User Angles
+    # output_list.append(local_quads_final)           # Ref Angles
+    output_list.append(person_list[best_person][5]) # Score
+    output_list.append(person_list[best_person][2]) # Missing Joint List
+
+    engine.stop()
+    print(output_list)
+    return output_list
+
+
+    # For instructions: Take difference in joint angles and direction,
+    # instruct them
+
+    # TODO: Instruction wording, derive from angles with direction, and give
+    # corresponding angles
+    # 'head', 'upperbody', 'arms', 'legs', 'feet'
+    # Direction Calculation for Arms
+    # if (x1 < x2 and y1 < y2) or (x1 > x2, y1 > y2):
+    #     if deltax < deltay: print("Moveup")
+    #     else: print("Movedown")
+    # else:
+    #     if deltax < deltay: print("Movedown")
+    #     else: print("Moveup")
+
+
+# TODO @ Hongzhe: Need to implement file search for different references
+def backend_process (mode, pose_name, image_name, tolerance):
+    # Process the user 
+    parseImageFromPath("user_input\\", "user_pose_data\\")
+
+    # Get reference
+    image_index = image_name.split(".png")[0]
+    print("pose_name.split = ", pose_name.split("-"))
+    reference_path = "SampleOutput\\" + str(int(pose_name.split("-")[0])) + "\\" + image_index + "_keypoints.json"
+    if mode == "custom":
+        reference_path = "user_poses\\" + pose_name + "\\" + "ref_coords\\" + image_index + "_keypoints.json"
+    user_path = "user_pose_data\\user_keypoints.json"
+
+    print("Comparing User data with " + reference_path, tolerance)
+
+    # Compare and generate output
+    return compare_poses(f"{reference_path}", user_path, tolerance)
+
+# Backend Submodule test code
+# Main function takes in the user image path and a reference name, compare the two poses and provide output
+# if __name__ == "__main__":
+#     # Parse cmdline input for test purpose
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--user_image", required = True)
+#     parser.add_argument("--reference_pose", required = True)
+#     parser.add_argument("--tolerance", type=int, default=10, help="Tolerance value")
+
+#     args = parser.parse_args()
+
+#     # Process user image with OpenPose
+#     # TODO: Implement a loop through grab the image until it appears. ?Will it work?
+#     parseImageFromPath(args.user_image, "user_pose_data\\")
+
+#     # Compare the poses
+#     reference_path = "SampleOutput\\1\\" + args.reference_pose + "_keypoints.json"
+#     user_path = "user_pose_data\\user_keypoints.json"
+
+#     print("Comparing User data with " + reference_path)
+
+#     compare_poses(reference_path, user_path)
+
+# TODO: Instruction wording/formatting. Feet on the ground? How you word to lower your thigh?
+# Angle between thigh and a reference vertical line, either to expand your legs or tighten them additional to the relative angle.
+
+# TODO: Feedbacks of posture analysis, limb specific instructions.
+# Raise/Lower {Left/Right} {limb name}, by {x} degrees. I have all limbs labelled so should be fine.
