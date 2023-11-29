@@ -762,7 +762,7 @@ class ConfirmScreen(Screen):
 
       # print("   src_path  : ", src_path
       
-      dest.append(f"{pose_folder_path}\\{i}.{filetype}")
+      dest.append(f"{pose_folder_path}\\{i + 1}.{filetype}")
       
     # print("src: ", src)
     for j in range(len(dest)):
