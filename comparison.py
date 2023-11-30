@@ -52,13 +52,13 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                "Left Lowerarm", "Torso", "Right Waist", "Left Waist", "Right Thigh", "Right Calf", 
                "Left Thigh", "Left Calf", "Left Feet", "Right Feet"]
 
-    body_parts = {
-        'head': ['Head'],
-        'upperbody': ['Torso', 'Left Waist', 'Right Waist'], 
-        'arms': ['Right Shoulder', 'Left Shoulder', 'Right Upperarm', 'Right Lowerarm', 'Left Upperarm', 'Left Lowerarm'],
-        'legs': ['Left Calf', 'Right Calf', 'Left Thigh', 'Right Thigh'],
-        'feet': ['Left Feet', 'Right Feet']
-}
+#     body_parts = {
+#         'head': ['Head'],
+#         'upperbody': ['Torso', 'Left Waist', 'Right Waist'], 
+#         'arms': ['Right Shoulder', 'Left Shoulder', 'Right Upperarm', 'Right Lowerarm', 'Left Upperarm', 'Left Lowerarm'],
+#         'legs': ['Left Calf', 'Right Calf', 'Left Thigh', 'Right Thigh'],
+#         'feet': ['Left Feet', 'Right Feet']
+# }
     
     print(f"Current Tolerance Angle: {tolerance}")
     if user_pose_path is None or ref_pose_path is None:
@@ -99,7 +99,16 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
     if not input_data["people"]:
         print("Error: No person found")
         return [False, local_keypoints, np.array([0]), [False], 0, ['Whole Body']]
- 
+
+    feetpass = False
+    # Detect if given pose has feet on ground
+    feet_1 = abs((local_keypoints[19] - local_keypoints[22])[1])
+    feet_2 = abs((local_keypoints[21] - local_keypoints[24])[1])
+    feet_3 = abs((local_keypoints[20] - local_keypoints[23])[1])
+    if feet_1 < 20 and feet_2 < 20 and feet_3 < 20:
+        print('Feet on Ground')
+        feetpass = True
+
     best_score = 0
     best_person = 0
     # Person list will be consist of cur_person in the loop below
@@ -433,11 +442,14 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                     n = 0
                 else:
                     n = 1
-                message = f"Turn your {name_list[k]} {word_choice[m][n]} by {abs(round(angle_degrees))} degrees"
-                sentence_list.append(message)
-                limb_checklist.append(False)
-                error_namelist.append(name_list[k])
-                error_angle.append(angle_degrees)
+                if feetpass == True and (k == 14 or k == 15):
+                    limb_checklist.append(True)
+                else:
+                    message = f"Turn your {name_list[k]} {word_choice[m][n]} by {abs(round(angle_degrees))} degrees"
+                    sentence_list.append(message)
+                    limb_checklist.append(False)
+                    error_namelist.append(name_list[k])
+                    error_angle.append(angle_degrees)
             if angle_degrees > max_degrees:
                 max_degrees = angle_degrees 
 
