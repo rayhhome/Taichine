@@ -811,6 +811,10 @@ def getFileTypeAndName(fileSrc):
 
   return filename, filetype
 
+# Tutorial screen
+class TutorialScreen(Screen):
+  pass
+
 # actual app
 class TaichineApp(App):
   pass 
