@@ -320,9 +320,16 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         else:
             localisfist_right = True
 
+        if localisfist_right != userisfist_right and localisfist_left != userisfist_left:
+            cur_person.append(["right", "left"])
+        elif localisfist_right != userisfist_right:
+            cur_person.append(["right"])
+        elif localisfist_left != userisfist_left:
+            cur_person.append(["left"])
+
 
         if localisfist_right != userisfist_right:
-            cur_person.append(["right"])
+            # cur_person.append(["right"])
             if localisfist_right:
                 message = "Change your right hand to fist!"
             else:
@@ -334,7 +341,7 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
             play_wav_file(out_path)
 
         if localisfist_left != userisfist_left:
-            cur_person.append(["left"])
+            # cur_person.append(["left"])
             if localisfist_right:
                 message = "Change your left hand to fist!"
             else:
