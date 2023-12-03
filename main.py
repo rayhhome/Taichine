@@ -572,7 +572,7 @@ class TrimmedCamera(Camera):
   # https://stackoverflow.com/questions/67967041/how-can-i-use-kivy-to-zoom-in-or-zoom-out-live-camera
   region_x = NumericProperty(200)
   region_y = NumericProperty(0)
-  region_w = NumericProperty(240)
+  region_w = NumericProperty(320)
   region_h = NumericProperty(480)
   
   def on_tex(self, camera):
