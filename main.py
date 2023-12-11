@@ -69,13 +69,12 @@ class SelectionScreen(Screen):
   mode = StringProperty('')
  
   def set_all(self):
-    sel_curr_dir = getcwd()
-    print("sel_curr_dir: ", sel_curr_dir)
+    
     if self.mode == 'integrated':
       pose_dir = 'poses'
     elif self.mode == 'custom':
-      curr_dir = getcwd()
-      print("curr_dir: ", curr_dir)
+      sel_curr_dir = getcwd()
+      print("sel_curr_dir: ", sel_curr_dir)
       pose_dir = 'user_poses'
     menu = self.ids['menu_grid']
     menu.bind(minimum_height = menu.setter('height'))
@@ -174,7 +173,8 @@ class TrainingScreen(Screen):
 
       # Ray: backend processing moved to move_on() 
       # backend_process()
-      self.move_on()
+      if(self.is_start):
+        self.move_on()
 
     self.start_countdown(finish_callback)
 
@@ -762,7 +762,7 @@ class ConfirmScreen(Screen):
 
       # print("   src_path  : ", src_path
       
-      dest.append(f"{pose_folder_path}\\{i}.{filetype}")
+      dest.append(f"{pose_folder_path}\\{i + 1}.{filetype}")
       
     # print("src: ", src)
     for j in range(len(dest)):
