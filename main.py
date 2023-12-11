@@ -11,6 +11,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.animation import Animation
 from kivy.uix.screenmanager import Screen
@@ -18,6 +19,7 @@ from kivy.uix.widget import Widget
 from kivy.uix.camera import Camera
 from kivy.core.window import Window
 from kivy.graphics import Color, Line, Rectangle, Ellipse
+from kivy.uix.popup import Popup
 
 from plyer import filechooser
 import os
@@ -602,14 +604,29 @@ class CustomScreen(Screen):
     
   def selected(self, selection):
     # print("len(selection) = ", len(selection))
+
     if(len(selection) == 0):
       self.cancel = True 
       return
-    # print("self.cancel", self.cancel)
-    # print("selection = ", selection)
+    elif(len(selection) > 5):
+      box = BoxLayout(orientation='vertical', spacing=200)
+      self.cancel = True
+      
+      dismiss_button = Button(text='close', size_hint=(1, 0.2))
+      
+      err_msg = Label(text='Too Many Images!')
+      box.add_widget(err_msg)
+      box.add_widget(dismiss_button)
+      popup = Popup(title='Upload Error', content=box, auto_dismiss=False, size_hint=(0.5, 0.5))
+      dismiss_button.bind(on_press=popup.dismiss)
+      popup.open()
+    else:
+      self.cancel = False
     globals()['path_selected'] = selection
     # print("globals()['path_selected']: ", globals()["path_selected"])
-
+    # print("self.cancel", self.cancel)
+    print("selection = ", selection)
+    
 # pose sequence item, used in custom screen
 class PoseSequenceItem(Widget):
   pass
