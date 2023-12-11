@@ -103,12 +103,13 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
         print("Error: No person found")
         return [False, local_keypoints, np.array([0]), [False], 0, ['Whole Body']]
 
+    threshold = 40 # Y-axis Difference of 40
     feetpass = False
     # Detect if given pose has feet on ground
     feet_1 = abs((local_keypoints[19] - local_keypoints[22])[1])
     feet_2 = abs((local_keypoints[21] - local_keypoints[24])[1])
     feet_3 = abs((local_keypoints[20] - local_keypoints[23])[1])
-    if feet_1 < 20 and feet_2 < 20 and feet_3 < 20:
+    if feet_1 < threshold and feet_2 < threshold and feet_3 < threshold:
         print('Feet on Ground')
         feetpass = True
 
@@ -411,7 +412,9 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
                     n = 0
                 else:
                     n = 1
-                if feetpass == True and (k == 14 or k == 15):
+                # if feetpass == True and (k == 14 or k == 15):
+                #     limb_checklist.append(True)
+                if k == 14 or k == 15:
                     limb_checklist.append(True)
                 else:
                     message = f"Turn your {name_list[k]} {word_choice[m][n]} by {abs(round(angle_degrees))} degrees"
