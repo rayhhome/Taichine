@@ -11,7 +11,6 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.animation import Animation
 from kivy.uix.screenmanager import Screen
@@ -19,7 +18,6 @@ from kivy.uix.widget import Widget
 from kivy.uix.camera import Camera
 from kivy.core.window import Window
 from kivy.graphics import Color, Line, Rectangle, Ellipse
-from kivy.uix.popup import Popup
 
 from plyer import filechooser
 import os
@@ -132,6 +130,7 @@ class TrainingScreen(Screen):
     self.attempt_acc = 0
     global preparation_time
     self.time_acc = preparation_time
+    # self.ids['camera']._camera_loaded()
 
   def set_reference_image(self, mode, seq_id, pos_id):
     # Ray: there are two modes: integrated and custom
@@ -576,9 +575,14 @@ class TrimmedCamera(Camera):
   region_y = NumericProperty(0)
   region_w = NumericProperty(320)
   region_h = NumericProperty(480)
+
+  def _camera_loaded(self):
+    self.texture = self._camera.texture
+    self.texture.flip_horizontal()
   
   def on_tex(self, camera):
     self.texture = texture = camera.texture
+    # self.texture.flip_horizontal()
     # get some region
     self.texture = self.texture.get_region(self.region_x, self.region_y, self.region_w, self.region_h)
     self.texture_size = list(texture.size)
@@ -604,29 +608,14 @@ class CustomScreen(Screen):
     
   def selected(self, selection):
     # print("len(selection) = ", len(selection))
-
     if(len(selection) == 0):
       self.cancel = True 
       return
-    elif(len(selection) > 5):
-      box = BoxLayout(orientation='vertical', spacing=200)
-      self.cancel = True
-      
-      dismiss_button = Button(text='close', size_hint=(1, 0.2))
-      
-      err_msg = Label(text='Too Many Images!')
-      box.add_widget(err_msg)
-      box.add_widget(dismiss_button)
-      popup = Popup(title='Upload Error', content=box, auto_dismiss=False, size_hint=(0.5, 0.5))
-      dismiss_button.bind(on_press=popup.dismiss)
-      popup.open()
-    else:
-      self.cancel = False
+    # print("self.cancel", self.cancel)
+    # print("selection = ", selection)
     globals()['path_selected'] = selection
     # print("globals()['path_selected']: ", globals()["path_selected"])
-    # print("self.cancel", self.cancel)
-    print("selection = ", selection)
-    
+
 # pose sequence item, used in custom screen
 class PoseSequenceItem(Widget):
   pass
@@ -798,9 +787,9 @@ class ConfirmScreen(Screen):
     self.ch_back_dir()
     main_curr_dir = getcwd()
     print("main_curr_dir: ", main_curr_dir)
-    os.mkdir(f"{pose_folder_path}\\ref_coords")
+    # os.mkdir(f"{pose_folder_path}\\ref_coords")
     # print("pose_folder_path", pose_folder_path)
-    parseImageFromPath(f'"{pose_folder_path}"', f'"{pose_folder_path}\\ref_coords"')
+    parseImageFromPath(f'"{pose_folder_path}"', f'"{pose_folder_path}"')
     self.posesList = []
     self.ids.grid_layout.clear_widgets()
     self.remove_widget(self.display_label)

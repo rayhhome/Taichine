@@ -439,7 +439,7 @@ ScreenManager:
       Slider:
         id: tolerance_slider
         min: 5
-        max: 25
+        max: 45
         value: 5
         step: 1
         orientation: 'horizontal'
@@ -531,9 +531,8 @@ ScreenManager:
 
       Label:
         text: "Please Upload a Custom Pose!"
+        font_size: 32
         color: 0, 0, 0, 1
-        font_size: 256
-        
       
       FloatLayout:
         canvas:
@@ -548,7 +547,6 @@ ScreenManager:
         Button:
           id: upload_button
           size_hint: 1, 1
-          background_color: 255,255,255, 0.9
           pos_hint: {'center_x': 0.5, 'center_y': 0.5}
           # background_normal: 'icons/file-upload_white.png'
           on_press: 
@@ -598,7 +596,6 @@ ScreenManager:
           root.ch_back_dir()
           root.manager.transition.direction = 'right'
           root.manager.current = 'custom'
-          root.ids.grid_layout.clear_widgets()
           
           
 
@@ -745,7 +742,7 @@ ScreenManager:
       id: image_label
       text: 'No Image Selected'
       center_x: self.parent.center_x
-      y: self.parent.top - (self.height * 0.5)
+      y: self.parent.top - self.height
       # width: self.parent.width
       color: 0, 0, 0, 1
       background_color: 0, 0, 0, 0

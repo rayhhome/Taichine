@@ -377,11 +377,11 @@ def compare_poses(ref_pose_path, user_pose_path, tolerance=10):
 
     if 'right' in cur_person[3]:
         message = "Great, you made it! But check your right wrist angle!"
-        sentence_list.append(message)
+        # sentence_list.append(message)
 
     if 'left' in cur_person[3]:
         message = "Great, you made it! But check your left wrist angle!"
-        sentence_list.append(message)
+        # sentence_list.append(message)
 
     # Uncomment the following to check outputs without full body in frame
     # if len(person_list[best_person][1]) != 0:
